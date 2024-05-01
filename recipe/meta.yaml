@@ -1,0 +1,44 @@
+package:
+  name: conda-pypi
+  {% if GIT_DESCRIBE_TAG is defined and GIT_BUILD_STR is defined %}
+  version: {{ GIT_DESCRIBE_TAG }}+{{ GIT_BUILD_STR }}
+  {% else %}
+  version: 0.0.0dev0
+  {% endif %}
+
+source:
+  # git_url only captures committed code
+  git_url: ../
+
+build:
+  # can't be noarch because we can't place EXTERNALLY-MANAGED in stdlib (first level is site-packages)
+  number: 0
+  noarch: python
+  script:
+    - {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+
+requirements:
+  host:
+    - python >=3.8
+    - pip
+    - hatchling >=1.12.2
+    - hatch-vcs >=0.2.0
+    - conda >=23.9
+  run:
+    - python >=3.8
+    - conda >=23.9
+    - conda-index
+
+test:
+  imports:
+    - conda_subchannel
+    - conda_subchannel.cli
+  commands:
+    - conda subchannel --help
+
+about:
+  home: https://github.com/jaimergp/conda-subchannel
+  license: MIT
+  license_file: LICENSE
+  summary: Create subsets of conda channels thanks to CEP-15 metadata
+  dev_url: https://github.com/jaimergp/conda-subchannel
