@@ -40,10 +40,10 @@ jobs:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
         with:
           fetch-depth: 0
-      - uses: prefix-dev/setup-pixi@v0.6.0
+      - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
         with:
           environments: ${{ env.PIXI_ENV_NAME }}
       - name: Setup project
