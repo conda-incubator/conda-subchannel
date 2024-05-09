@@ -10,6 +10,7 @@ from conda.common.io import ThreadLimitedThreadPoolExecutor
 from conda.base.constants import REPODATA_FN
 from conda.core.subdir_data import SubdirData
 from conda.models.channel import Channel
+from conda.models.match_spec import MatchSpec
 
 if TYPE_CHECKING:
     import os
@@ -38,27 +39,28 @@ def _reduce_index(
     trees_to_remove: Iterable[str | MatchSpec] | None = None,  # TODO
     after: int | str | None = None,  # TODO
     before: int | str | None = None,  # TODO
-) -> dict[tuple[str, str], PackageRecord]:
-    counts = []
-    records = {
-        (sd.channel.subdir, rec.fn): rec for sd in subdir_datas for rec in sd.iter_records()
-    }
-    counts.append(("Initial", len(records)))
-    if specs_to_keep:
-        records = {
-            (sd.channel.subdir, rec.fn): rec
-            for spec in specs_to_keep
-            for sd in subdir_datas
-            for rec in sd.query(spec)
-        }
-        counts.append(("After Keep", len(records)))
-    if specs_to_remove:
-        for spec in specs_to_remove:
-            for sd in subdir_datas:
-                for rec in sd.query(spec):
-                    records.pop((sd.channel.subdir, rec.fn), None)
-        counts.append(("After Remove", len(records)))
-    return records
+) -> tuple[dict[tuple[str, str], PackageRecord], int]:
+    specs_to_keep = [MatchSpec(spec) for spec in (specs_to_keep or ())]
+    specs_to_remove = [MatchSpec(spec) for spec in (specs_to_remove or ())]
+    trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
+    trees_to_remove = [MatchSpec(spec) for spec in (trees_to_remove or ())]
+    total_count = 0
+    records = {}
+    for sd in subdir_datas:
+        for record in sd.iter_records():
+            total_count += 1
+            keep_conditions = [True]
+            if before is not None:
+                keep_conditions.append(record.timestamp <= before)
+            if specs_to_keep:
+                keep_conditions.append(any(spec.match(record) for spec in specs_to_keep))
+            if specs_to_remove:
+                keep_conditions.append(not any(spec.match(record) for spec in specs_to_remove))
+            if after is not None:
+                keep_conditions.append(record.timestamp >= after)
+            if all(keep_conditions):
+                records[(sd.channel.subdir, record.fn)] = record
+    return records, total_count
 
 
 def _dump_records(
