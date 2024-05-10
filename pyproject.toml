@@ -25,7 +25,7 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
   "conda >=23.9",
-  "conda-index",
+  "zstandard",
 ]
 dynamic = [
   "version"

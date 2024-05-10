@@ -48,13 +48,12 @@ def configure_parser(parser: argparse.ArgumentParser):
         type=date_argument,
     )
     parser.add_argument("--keep-tree", metavar="SPEC", action="append")
-    parser.add_argument("--remove-tree", metavar="SPEC", action="append")
     parser.add_argument("--keep", metavar="SPEC", action="append")
     parser.add_argument("--remove", metavar="SPEC", action="append")
 
 
 def execute(args: argparse.Namespace) -> int:
-    with Spinner("Syncing source channels"):
+    with Spinner("Syncing source channel"):
         subdir_datas = _fetch_channel(
             args.channel, args.subdirs or context.subdirs, args.repodata_fn
         )
@@ -62,16 +61,20 @@ def execute(args: argparse.Namespace) -> int:
         print(" -", sd.channel.name, sd.channel.subdir)
 
     with Spinner("Filtering package records"):
-        records, total_count = _reduce_index(
+        records = _reduce_index(
             subdir_datas=subdir_datas,
             specs_to_keep=args.keep,
             specs_to_remove=args.remove,
             trees_to_keep=args.keep_tree,
-            trees_to_remove=args.remove_tree,
             after=args.after,
             before=args.before,
         )
-    print(" - Reduced from", total_count, "to", len(records), "records")
+    total_count = sum(len(sd._package_records) for sd in subdir_datas)
+    filtered_count = len(records)
+    if total_count == filtered_count:
+        print (" - Didn't filter any records!")
+        return 1
+    print(" - Reduced from", total_count, "to", filtered_count, "records")
 
     with Spinner(f"Writing output to {args.output}"):
         repodatas = _dump_records(records, args.channel)
