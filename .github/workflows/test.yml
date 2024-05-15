@@ -11,7 +11,7 @@ on:
       - "conda_subchannel/**"
       - "tests/**"
       - "pyproject.toml"
-      - "pixi.toml"
+      - "pixi.lock"
 
 concurrency:
   # Concurrency group that uses the workflow name and PR number if available
@@ -40,7 +40,7 @@ jobs:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
       - uses: prefix-dev/setup-pixi@d72307a91ccc8a856376cdb9ff5b074a04422409 # v0.7.0
@@ -52,5 +52,5 @@ jobs:
       - name: Run tests
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }}
       - name: Build recipe (${{ env.PIXI_ENV_NAME }})
-        if: matrix.python-version == '3.10'
+        if: matrix.python-version == '310'
         run: pixi run build
