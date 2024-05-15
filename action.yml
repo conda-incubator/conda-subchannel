@@ -73,7 +73,7 @@ runs:
       run: pixi run --environment default dev
     - name: Run subchannel
       shell: pixi run --environment default bash -e {0}
-      run: >
+      run: |
         args="--channel ${{ inputs.channel }}"
         args+=" --output '${{ steps.validate.outputs.output-directory }}'"
         args+=" --repodata-fn '${{ inputs.repodata-fn }}'"
