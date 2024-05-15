@@ -68,3 +68,4 @@ jobs:
         with:
           channel: conda-forge
           keep-trees: python=3.9
+          gh-pages-branch: ''  # disable on main
