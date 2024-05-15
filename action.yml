@@ -43,6 +43,12 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Check Runner OS
+      if: ${{ runner.os != 'Linux' }}
+      shell: bash
+      run: |
+        echo "::error title=⛔ error hint::Only Linux is supported"
+        exit 1
     - name: Validate arguments
       shell: bash
       id: validate
@@ -54,18 +60,27 @@ runs:
           && "${{ inputs.keep-specs }}" == "" 
           && "${{ inputs.remove-specs }}" == "" 
         ]]; then
-          echo "At least one of after, before, keep-trees, keep-specs or remove-specs must be set"
+          echo "::error title=⛔ error hint::At least one of `after`, `before`, `keep-trees`, `keep-specs` or `remove-specs` must be set"
           exit 1
         fi
         mkdir -p "${{ runner.temp }}/subchannel"
         echo "output-directory=${{ runner.temp }}/subchannel" >> $GITHUB_OUTPUT
+    - name: Checkout
+      uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      with:
+        repository: jaimergp/conda-subchannel
+        path: _subchannel_src
+        fetch-depth: 0
     - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
+      working-directory: ${{ github.workspace }}/_subchannel_src
       with:
         environments: py310
     - name: Setup project
+      working-directory: ${{ github.workspace }}/_subchannel_src
       shell: bash
       run: pixi run --environment py310 dev
     - name: Run subchannel
+      working-directory: ${{ github.workspace }}/_subchannel_src
       shell: pixi run --environment py310 bash -e {0}
       run: >
         args="--channel ${{ inputs.channel }}"
