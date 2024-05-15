@@ -7,7 +7,6 @@ from __future__ import annotations
 import argparse
 from logging import getLogger
 from datetime import datetime, timezone
-from unittest import mock
 
 from conda.exceptions import ArgumentError
 from conda.base.constants import REPODATA_FN
@@ -16,7 +15,7 @@ from conda.common.io import Spinner
 
 from .core import _fetch_channel, _reduce_index, _dump_records, _write_to_disk
 
-logger = getLogger(f"conda.{__name__}")
+log = getLogger(f"conda.{__name__}")
 
 
 def date_argument(date: str) -> float:
@@ -93,9 +92,7 @@ def execute(args: argparse.Namespace) -> int:
     if not any([args.after, args.before, args.keep, args.remove, args.keep_tree]):
         raise ArgumentError("Please provide at least one filter.")
 
-    with Spinner("Syncing source channel"), mock.patch.object(
-        context, "add_pip_as_python_dependency", False
-    ):
+    with Spinner("Syncing source channel"):
         subdir_datas = _fetch_channel(
             args.channel, args.subdirs or context.subdirs, args.repodata_fn
         )

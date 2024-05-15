@@ -77,7 +77,6 @@ def test_python_tree(conda_cli, tmp_path, monkeypatch):
     assert python_count
     assert other_count
 
-    monkeypatch.setenv("CONDA_PKGS_DIRS", str(tmp_path / "pkgs"))
     # This should be solvable
     with pytest.raises(DryRunExit):
         conda_cli(

@@ -60,7 +60,7 @@ def _keep_records(
                     continue
                 if after is not None and record.timestamp <= after:
                     continue
-                yield sd, record 
+                yield sd, record
     else:
         raise ValueError("Must provide at least one truthy 'specs', 'after' or 'before'.")
 
@@ -79,7 +79,6 @@ def _reduce_index(
     if trees_to_keep or specs_to_keep or after is not None or before is not None:
         records = {}
         names_to_keep = {MatchSpec(spec).name: spec for spec in (*specs_to_keep, *trees_to_keep)}
-        names_to_remove = {MatchSpec(spec).name: spec for spec in specs_to_remove}
         if trees_to_keep:
             specs_from_trees = set()
             for sd, record in _keep_records(subdir_datas, trees_to_keep, after, before):
@@ -90,7 +89,6 @@ def _reduce_index(
                     specs_from_trees.add(MatchSpec(dep))
 
             # First we filter with the recursive actions
-            maybe_dep_cycle = set()
             while specs_from_trees:
                 spec = specs_from_trees.pop()
                 for sd in subdir_datas:
@@ -99,22 +97,24 @@ def _reduce_index(
                             continue
                         records[(sd.channel.subdir, record.fn)] = record
                         for dep in record.depends:
-                            dep_spec = MatchSpec(dep)
-                            if requested_spec := names_to_keep.get(dep_spec.name):
-                                if dep_spec.name not in names_to_remove:
-                                    maybe_dep_cycle.add(dep)
-                                # This can introduce cycles; let's hope the merged spec works
-                                dep_spec = MatchSpec.merge([dep_spec, requested_spec])[0]
-                            specs_from_trees.add(dep_spec)
-            if maybe_dep_cycle:
-                log.warning(
-                    "Found potential dependency cycles in your keep-trees. This might mean that "
-                    "you ended up with more packages than intended. To filter those out, consider "
-                    "adding a --remove flag with the negated --keep-tree. This usually happens "
-                    "with --keep=python=x.y and add_pip_as_python_dependency=true. To remediate, "
-                    "add --remove=python!=x.y. The problematic specs are: %s",
-                    sorted(maybe_dep_cycle)
-                )
+                            # This step might readd dependencies that are not part of the
+                            # requested tree; e.g python=3.9 might add pip, which depends on python,
+                            # which will then appear again. We will clear those later.
+                            specs_from_trees.add(MatchSpec(dep))
+
+        # Remove records added by circular dependencies (python -> pip -> python); this might
+        # break solvability, but in principle the solver should only allow one record per package
+        # name in the solution, so it should be ok to remove name matches that are not fitting the
+        # initially requested spec. IOW, if a requested spec adds a dependency that ends up
+        # depending on the requested spec again, the initial node should satisfy that and doesn't
+        # doesn't need the extra ones.
+        to_remove = []
+        for key, record in records.items():
+            if (spec := names_to_keep.get(record.name)) and not spec.match(record):
+                to_remove.append(key)
+        for key in to_remove:
+            del records[key]
+
         if specs_to_keep or after is not None or before is not None:
             # Now we also add the slice of non-recursive keeps:
             for sd, record in _keep_records(subdir_datas, specs_to_keep, after, before):
