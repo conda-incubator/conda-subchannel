@@ -99,9 +99,10 @@ def execute(args: argparse.Namespace) -> int:
         raise ArgumentError("Please provide at least one filter.")
 
     with Spinner("Syncing source channel"):
-        subdir_datas = _fetch_channel(
-            args.channel, args.subdirs or context.subdirs, args.repodata_fn
-        )
+        subdirs = args.subdirs or context.subdirs
+        if "noarch" not in subdirs:
+            subdirs = *subdirs, "noarch"
+        subdir_datas = _fetch_channel(args.channel, subdirs, args.repodata_fn)
     for sd in sorted(subdir_datas, key=lambda sd: sd.channel.name):
         print(" -", sd.channel.name, sd.channel.subdir)
 
