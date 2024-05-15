@@ -51,10 +51,6 @@ jobs:
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
       - name: Run tests
         run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: matrix.python-version == '310'
-        timeout-minutes: 45
       - name: Build recipe (${{ env.PIXI_ENV_NAME }})
         if: matrix.python-version == '310'
         run: pixi run build
