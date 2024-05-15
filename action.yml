@@ -67,13 +67,12 @@ runs:
         echo "output-directory=${{ runner.temp }}/subchannel" >> $GITHUB_OUTPUT
     - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
       with:
-        environments: py310
-        manifest-path: ${{ github.action_path }}/pyproject.toml
+        environments: default
     - name: Setup project
       shell: bash
-      run: cd "${{ github.action_path }}" && pixi run --environment py310 dev
+      run: pixi run --environment default dev
     - name: Run subchannel
-      shell: cd "${{ github.action_path }}" && pixi run --environment py310 bash -e {0}
+      shell: pixi run --environment default bash -e {0}
       run: >
         args="--channel ${{ inputs.channel }}"
         args+=" --output '${{ steps.validate.outputs.output-directory }}'"
