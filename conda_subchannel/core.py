@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import bz2
 import json
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 
 ZSTD_COMPRESS_LEVEL = 16
 ZSTD_COMPRESS_THREADS = -1  # automatic
+
+log = logging.getLogger(f"conda.{__name__}")
 
 
 def _fetch_channel(channel, subdirs=None, repodata_fn=REPODATA_FN):
@@ -57,7 +60,7 @@ def _keep_records(
                     continue
                 if after is not None and record.timestamp <= after:
                     continue
-                yield sd, record 
+                yield sd, record
     else:
         raise ValueError("Must provide at least one truthy 'specs', 'after' or 'before'.")
 
@@ -75,6 +78,7 @@ def _reduce_index(
     trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
     if trees_to_keep or specs_to_keep or after is not None or before is not None:
         records = {}
+        names_to_keep = {MatchSpec(spec).name: spec for spec in (*specs_to_keep, *trees_to_keep)}
         if trees_to_keep:
             specs_from_trees = set()
             for sd, record in _keep_records(subdir_datas, trees_to_keep, after, before):
@@ -93,7 +97,23 @@ def _reduce_index(
                             continue
                         records[(sd.channel.subdir, record.fn)] = record
                         for dep in record.depends:
+                            # This step might readd dependencies that are not part of the
+                            # requested tree; e.g python=3.9 might add pip, which depends on python,
+                            # which will then appear again. We will clear those later.
                             specs_from_trees.add(MatchSpec(dep))
+
+        # Remove records added by circular dependencies (python -> pip -> python); this might
+        # break solvability, but in principle the solver should only allow one record per package
+        # name in the solution, so it should be ok to remove name matches that are not fitting the
+        # initially requested spec. IOW, if a requested spec adds a dependency that ends up
+        # depending on the requested spec again, the initial node should satisfy that and doesn't
+        # doesn't need the extra ones.
+        to_remove = []
+        for key, record in records.items():
+            if (spec := names_to_keep.get(record.name)) and not spec.match(record):
+                to_remove.append(key)
+        for key in to_remove:
+            del records[key]
 
         if specs_to_keep or after is not None or before is not None:
             # Now we also add the slice of non-recursive keeps:

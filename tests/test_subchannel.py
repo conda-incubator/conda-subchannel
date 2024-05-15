@@ -5,6 +5,7 @@ import pytest
 from conda.base.context import context
 from conda.core.subdir_data import SubdirData
 from conda.models.channel import Channel
+from conda.models.match_spec import MatchSpec
 from conda.exceptions import ArgumentError, DryRunExit, PackagesNotFoundError
 from conda.testing import conda_cli  # noqa
 
@@ -45,13 +46,14 @@ def test_only_python(conda_cli, tmp_path):
 
 
 def test_python_tree(conda_cli, tmp_path, monkeypatch):
+    spec = "python=3.9"
     channel_path = tmp_path / "channel"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--keep-tree",
-        "python=3.9",
+        spec,
         "--output",
         channel_path,
     )
@@ -65,15 +67,16 @@ def test_python_tree(conda_cli, tmp_path, monkeypatch):
     sd.load()
     python_count = 0
     other_count = 0
+    py39 = MatchSpec(spec)
     for record in sd.iter_records():  # we should see Python and their dependencies
         if record.name == "python":
+            assert py39.match(record)
             python_count += 1
         else:
             other_count += 1
     assert python_count
     assert other_count
 
-    monkeypatch.setenv("CONDA_PKGS_DIRS", str(tmp_path / "pkgs"))
     # This should be solvable
     with pytest.raises(DryRunExit):
         conda_cli(

@@ -9,13 +9,13 @@ from logging import getLogger
 from datetime import datetime, timezone
 
 from conda.exceptions import ArgumentError
+from conda.base.constants import REPODATA_FN
 from conda.base.context import context
 from conda.common.io import Spinner
-from conda.base.constants import REPODATA_FN
 
 from .core import _fetch_channel, _reduce_index, _dump_records, _write_to_disk
 
-logger = getLogger(f"conda.{__name__}")
+log = getLogger(f"conda.{__name__}")
 
 
 def date_argument(date: str) -> float:
