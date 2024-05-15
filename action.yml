@@ -76,8 +76,8 @@ runs:
       shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
       run: |
         args="--channel ${{ inputs.channel }}"
-        args+=" --output '${{ steps.validate.outputs.output-directory }}'"
-        args+=" --repodata-fn '${{ inputs.repodata-fn }}'"
+        args+=" --output ${{ steps.validate.outputs.output-directory }}"
+        args+=" --repodata-fn ${{ inputs.repodata-fn }}"
         for subdir in ${{ inputs.subdirs }}; do
           args+=" --subdir $subdir"
         done
@@ -89,17 +89,17 @@ runs:
         fi
         if [[ "${{ inputs.keep-trees }}" != "" ]]; then
           for spec in ${{ inputs.keep-trees }}; do
-            args+=" --keep-tree '$spec'"
+            args+=" --keep-tree $spec"
           done
         fi
         if [[ "${{ inputs.keep-specs }}" != "" ]]; then
           for spec in ${{ inputs.keep-specs }}; do
-            args+=" --keep '$spec'"
+            args+=" --keep $spec"
           done
         fi
         if [[ "${{ inputs.remove-specs }}" != "" ]]; then
           for spec in ${{ inputs.remove-specs }}; do
-            args+=" --remove '$spec'"
+            args+=" --remove $spec"
           done
         fi
         echo "Running: conda subchannel $args"
