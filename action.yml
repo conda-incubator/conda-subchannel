@@ -65,23 +65,15 @@ runs:
         fi
         mkdir -p "${{ runner.temp }}/subchannel"
         echo "output-directory=${{ runner.temp }}/subchannel" >> $GITHUB_OUTPUT
-    - name: Checkout
-      uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
-      with:
-        repository: jaimergp/conda-subchannel
-        path: _subchannel_src
-        fetch-depth: 0
     - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
-      working-directory: ${{ github.workspace }}/_subchannel_src
       with:
         environments: py310
+        manifest-path: ${{ github.action_path }}/pyproject.toml
     - name: Setup project
-      working-directory: ${{ github.workspace }}/_subchannel_src
       shell: bash
-      run: pixi run --environment py310 dev
+      run: cd "${{ github.action_path }}" && pixi run --environment py310 dev
     - name: Run subchannel
-      working-directory: ${{ github.workspace }}/_subchannel_src
-      shell: pixi run --environment py310 bash -e {0}
+      shell: cd "${{ github.action_path }}" && pixi run --environment py310 bash -e {0}
       run: >
         args="--channel ${{ inputs.channel }}"
         args+=" --output '${{ steps.validate.outputs.output-directory }}'"
