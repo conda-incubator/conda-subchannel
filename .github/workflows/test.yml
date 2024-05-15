@@ -54,3 +54,13 @@ jobs:
       - name: Build recipe (${{ env.PIXI_ENV_NAME }})
         if: matrix.python-version == '310'
         run: pixi run build
+  
+  action:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # to deploy to GH Pages automatically
+    steps:
+      - uses: ./
+        with:
+          channel: conda-forge
+          keep-trees: python=3.9
