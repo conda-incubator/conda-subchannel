@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import bz2
+import hashlib
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -162,7 +164,55 @@ def _dump_records(
     return repodatas
 
 
+def _checksum(path, algorithm, buffersize=65536):
+    hash_impl = getattr(hashlib, algorithm)()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(buffersize), b""):
+            hash_impl.update(block)
+    return hash_impl.hexdigest()
+
+
+def _write_channel_index_md(source_channel: Channel, channel_path: Path):
+    channel_path = Path(channel_path)
+    lines = [
+        f"# {channel_path.name}",
+        "",
+        f"Derived from [{source_channel.name}]({source_channel.base_url})",
+        "",
+        ""
+    ]
+    for subdir in channel_path.glob("*"):
+        if subdir.is_file():
+            continue
+        lines[-1] += f"[{subdir.name}]({subdir.name}) "
+    (channel_path / "index.md").write_text("\n".join(lines))
+
+
+def _write_subdir_index_md(subdir_path: Path):
+    subdir_path = Path(subdir_path)
+    lines = [
+        f"# {'/'.join(subdir_path.parts[-2:])}",
+        "| Filename | Size (B) | Last modified | SHA256 | MD5 |",
+        "|----------|----------|---------------|--------|-----|",
+    ]
+    for path in sorted(subdir_path.glob("*")):
+        if path.name == "index.md":
+            continue
+        stat = path.stat()
+        size = stat.st_size
+        lastmod = datetime.fromtimestamp(stat.st_mtime)
+        sha256 = _checksum(path, "sha256")
+        md5 = _checksum(path, "md5")
+        lines.append(
+            f"| [{path.name}]({path.name}) | {size} | {lastmod} | `{sha256}` | `{md5}` |"
+        )
+    lines.append("")
+    lines.append(f"> Last modified on {datetime.now(tz=timezone.utc)}")
+    (subdir_path / "index.md").write_text("\n".join(lines))
+
+
 def _write_to_disk(
+    source_channel: Channel | str,
     repodatas: dict[str, dict[str, Any]],
     path: os.PathLike | str,
     outputs: Iterable[str] = ("bz2", "zstd"),
@@ -185,8 +235,13 @@ def _write_to_disk(
                     level=ZSTD_COMPRESS_LEVEL, threads=ZSTD_COMPRESS_THREADS
                 ).compress(json_contents.encode("utf-8"))
                 fo.write(repodata_zst_content)
+        _write_subdir_index_md(path / subdir)
+
     # noarch must always be present
     noarch_repodata = path / "noarch" / "repodata.json"
     if not noarch_repodata.is_file():
         noarch_repodata.parent.mkdir(parents=True, exist_ok=True)
         noarch_repodata.write_text("{}")
+        _write_subdir_index_md(path / "noarch")
+
+    _write_channel_index_md(Channel(source_channel), path)
