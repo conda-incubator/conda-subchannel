@@ -73,7 +73,7 @@ runs:
       shell: bash
       run: cd "${{ github.action_path }}" && pixi run --environment default dev
     - name: Run subchannel
-      shell: cd "${{ github.action_path }}" && pixi run --environment default bash -e {0}
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
       run: |
         args="--channel ${{ inputs.channel }}"
         args+=" --output '${{ steps.validate.outputs.output-directory }}'"
