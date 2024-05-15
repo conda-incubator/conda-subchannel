@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import bz2
 import json
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 
 ZSTD_COMPRESS_LEVEL = 16
 ZSTD_COMPRESS_THREADS = -1  # automatic
+
+log = logging.getLogger(f"conda.{__name__}")
 
 
 def _fetch_channel(channel, subdirs=None, repodata_fn=REPODATA_FN):
@@ -75,6 +78,8 @@ def _reduce_index(
     trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
     if trees_to_keep or specs_to_keep or after is not None or before is not None:
         records = {}
+        names_to_keep = {MatchSpec(spec).name: spec for spec in (*specs_to_keep, *trees_to_keep)}
+        names_to_remove = {MatchSpec(spec).name: spec for spec in specs_to_remove}
         if trees_to_keep:
             specs_from_trees = set()
             for sd, record in _keep_records(subdir_datas, trees_to_keep, after, before):
@@ -85,6 +90,7 @@ def _reduce_index(
                     specs_from_trees.add(MatchSpec(dep))
 
             # First we filter with the recursive actions
+            maybe_dep_cycle = set()
             while specs_from_trees:
                 spec = specs_from_trees.pop()
                 for sd in subdir_datas:
@@ -93,8 +99,22 @@ def _reduce_index(
                             continue
                         records[(sd.channel.subdir, record.fn)] = record
                         for dep in record.depends:
-                            specs_from_trees.add(MatchSpec(dep))
-
+                            dep_spec = MatchSpec(dep)
+                            if requested_spec := names_to_keep.get(dep_spec.name):
+                                if dep_spec.name not in names_to_remove:
+                                    maybe_dep_cycle.add(dep)
+                                # This can introduce cycles; let's hope the merged spec works
+                                dep_spec = MatchSpec.merge([dep_spec, requested_spec])[0]
+                            specs_from_trees.add(dep_spec)
+            if maybe_dep_cycle:
+                log.warning(
+                    "Found potential dependency cycles in your keep-trees. This might mean that "
+                    "you ended up with more packages than intended. To filter those out, consider "
+                    "adding a --remove flag with the negated --keep-tree. This usually happens "
+                    "with --keep=python=x.y and add_pip_as_python_dependency=true. To remediate, "
+                    "add --remove=python!=x.y. The problematic specs are: %s",
+                    sorted(maybe_dep_cycle)
+                )
         if specs_to_keep or after is not None or before is not None:
             # Now we also add the slice of non-recursive keeps:
             for sd, record in _keep_records(subdir_datas, specs_to_keep, after, before):
