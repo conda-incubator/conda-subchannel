@@ -8,10 +8,6 @@ inputs:
     description: "Source repodata file to process from channel"
     required: false
     default: "repodata.json"
-  output-directory:
-    description: "Directory where the subchannel repodata.json artifacts will be written to."
-    required: false
-    default: "subchannel"
   subdirs:
     description: "List of platforms to support, space separated. Defaults to linux-64. Noarch is always included" 
     required: false
@@ -61,9 +57,8 @@ runs:
           echo "At least one of after, before, keep-trees, keep-specs or remove-specs must be set"
           exit 1
         fi
-        mkdir -p "${{ inputs.output-directory }}"
-        cd "${{ inputs.output-directory }}"
-        echo "output-directory=$(pwd)" >> $GITHUB_OUTPUT
+        mkdir -p "${{ runner.temp }}/subchannel"
+        echo "output-directory=${{ runner.temp }}/subchannel" >> $GITHUB_OUTPUT
     - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
       with:
         environments: py310
@@ -74,7 +69,7 @@ runs:
       shell: pixi run --environment py310 bash -e {0}
       run: >
         args="--channel ${{ inputs.channel }}"
-        args+=" --output '${{ inputs.output-directory }}'"
+        args+=" --output '${{ steps.validate.outputs.output-directory }}'"
         args+=" --repodata-fn '${{ inputs.repodata-fn }}'"
         for subdir in ${{ inputs.subdirs }}; do
           args+=" --subdir $subdir"
