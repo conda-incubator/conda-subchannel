@@ -44,7 +44,8 @@ def test_only_python(conda_cli, tmp_path):
     assert tested
 
 
-def test_python_tree(conda_cli, tmp_path):
+def test_python_tree(conda_cli, tmp_path, monkeypatch):
+    channel_path = tmp_path / "channel"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
@@ -52,14 +53,14 @@ def test_python_tree(conda_cli, tmp_path):
         "--keep-tree",
         "python=3.9",
         "--output",
-        tmp_path,
+        channel_path,
     )
     print(out)
     print(err, file=sys.stderr)
     assert rc == 0
     tested = 0
     tested += 1
-    channel = Channel(str(tmp_path / context.subdir))
+    channel = Channel(str(channel_path / context.subdir))
     sd = SubdirData(channel)
     sd.load()
     python_count = 0
@@ -72,7 +73,7 @@ def test_python_tree(conda_cli, tmp_path):
     assert python_count
     assert other_count
 
-
+    monkeypatch.setenv("CONDA_PKGS_DIRS", str(tmp_path / "pkgs"))
     # This should be solvable
     with pytest.raises(DryRunExit):
         conda_cli(
@@ -82,7 +83,7 @@ def test_python_tree(conda_cli, tmp_path):
             "unused",
             "--override-channels",
             "--channel",
-            tmp_path,
+            channel_path,
             "python=3.9",
         )
 
@@ -95,7 +96,7 @@ def test_python_tree(conda_cli, tmp_path):
             "unused",
             "--override-channels",
             "--channel",
-            tmp_path,
+            channel_path,
             "python=3.10",
         )
 
