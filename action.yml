@@ -105,7 +105,7 @@ runs:
         echo "Running: conda subchannel $args"
         conda subchannel $args
     - name: Decide deployment
-      if: decide
+      id: decide
       shell: bash
       run: |
         if [[ "${{ inputs.gh-pages-branch }}" != "" && "${{ github.ref }}" == "refs/heads/main" ]]; then
