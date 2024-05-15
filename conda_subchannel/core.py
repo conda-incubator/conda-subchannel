@@ -41,14 +41,25 @@ def _keep_records(
     after: int | None = None,
     before: int | None = None,
 ) -> Iterator[tuple[SubdirData, PackageRecord]]:
-    for spec in specs:
+    if specs:
+        for spec in specs:
+            for sd in subdir_datas:
+                for record in sd.query(spec):
+                    if before is not None and record.timestamp >= before:
+                        continue
+                    if after is not None and record.timestamp <= after:
+                        continue
+                    yield sd, record
+    elif before is not None or after is not None:
         for sd in subdir_datas:
-            for record in sd.query(spec):
-                if before is not None and record.timestamp > before:
+            for record in sd.iter_records():
+                if before is not None and record.timestamp >= before:
                     continue
-                if after is not None and record.timestamp < after:
+                if after is not None and record.timestamp <= after:
                     continue
-                yield sd, record
+                yield sd, record 
+    else:
+        raise ValueError("Must provide at least one truthy 'specs', 'after' or 'before'.")
 
 
 def _reduce_index(
@@ -62,38 +73,40 @@ def _reduce_index(
     specs_to_keep = [MatchSpec(spec) for spec in (specs_to_keep or ())]
     specs_to_remove = [MatchSpec(spec) for spec in (specs_to_remove or ())]
     trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
-    if trees_to_keep or specs_to_keep:
+    if trees_to_keep or specs_to_keep or after is not None or before is not None:
         records = {}
-        specs_from_trees = set()
-        for sd, record in _keep_records(subdir_datas, trees_to_keep, after, before):
-            if (sd.channel.subdir, record.fn) in records:
-                continue
-            records[(sd.channel.subdir, record.fn)] = record
-            for dep in record.depends:
-                specs_from_trees.add(MatchSpec(dep))
+        if trees_to_keep:
+            specs_from_trees = set()
+            for sd, record in _keep_records(subdir_datas, trees_to_keep, after, before):
+                if (sd.channel.subdir, record.fn) in records:
+                    continue
+                records[(sd.channel.subdir, record.fn)] = record
+                for dep in record.depends:
+                    specs_from_trees.add(MatchSpec(dep))
 
-        # First we filter with the recursive actions
-        while specs_from_trees:
-            spec = specs_from_trees.pop()
-            for sd in subdir_datas:
-                for record in sd.query(spec):
-                    if (sd.channel.subdir, record.fn) in records:
-                        continue
-                    records[(sd.channel.subdir, record.fn)] = record
-                    for dep in record.depends:
-                        specs_from_trees.add(MatchSpec(dep))
+            # First we filter with the recursive actions
+            while specs_from_trees:
+                spec = specs_from_trees.pop()
+                for sd in subdir_datas:
+                    for record in sd.query(spec):
+                        if (sd.channel.subdir, record.fn) in records:
+                            continue
+                        records[(sd.channel.subdir, record.fn)] = record
+                        for dep in record.depends:
+                            specs_from_trees.add(MatchSpec(dep))
 
-        # Now we also add the slice of non-recursive keeps:
-        for sd, record in _keep_records(subdir_datas, specs_to_keep, after, before):
-            if (sd.channel.subdir, record.fn) in records:
-                continue
-            records[(sd.channel.subdir, record.fn)] = record
+        if specs_to_keep or after is not None or before is not None:
+            # Now we also add the slice of non-recursive keeps:
+            for sd, record in _keep_records(subdir_datas, specs_to_keep, after, before):
+                if (sd.channel.subdir, record.fn) in records:
+                    continue
+                records[(sd.channel.subdir, record.fn)] = record
     else:
         # No keep filters = We start with _everything_
         records = {
             (sd.channel.subdir, record.fn): record
             for sd in subdir_datas
-            for record in sd.iter_records
+            for record in sd.iter_records()
         }
 
     # Now that we know what to keep, we remove stuff
