@@ -49,10 +49,11 @@ runs:
       run: |
         echo "::error title=⛔ error hint::Only Linux is supported"
         exit 1
-    - name: Validate arguments
+    - name: Validate inputs
       shell: bash
       id: validate
       run: |
+        # Validate inputs
         if [[ 
           "${{ inputs.after }}" == "" 
           && "${{ inputs.before }}" == "" 
@@ -72,11 +73,13 @@ runs:
     - name: Setup project
       shell: bash
       run: |
+        # Install project
         cd "${{ github.action_path }}"
         SETUPTOOLS_SCM_PRETEND_VERSION=0.1 pixi run --environment default python -mpip install --no-deps .
     - name: Prepare command
       shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default python -u {0}
       run: |
+        # Prepare and run conda subchannel
         import subprocess
         import sys
 
@@ -112,13 +115,11 @@ runs:
             [sys.executable, "-mconda", "subchannel", *args],
         )
         sys.exit(p.returncode)
-    - name: Run command
-      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
-      run: conda subchannel $subchannel_cmd
     - name: Decide deployment
       id: decide
       shell: bash
       run: |
+        # Decide if we deploy to GH Pages or not
         if [[ "${{ inputs.gh-pages-branch }}" != "" && "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "deploy=true" >> $GITHUB_OUTPUT
         else
