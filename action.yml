@@ -71,7 +71,7 @@ runs:
         manifest-path: ${{ github.action_path }}/pyproject.toml
     - name: Setup project
       shell: bash
-      run: cd "${{ github.action_path }}" && pixi run --environment default dev
+      run: cd "${{ github.action_path }}" && pixi run --environment default python -mpip install . --no-deps
     - name: Run subchannel
       shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
       run: |
