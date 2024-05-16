@@ -167,9 +167,7 @@ def _dump_records(
                 "repodata_version": 2,
                 "info": {
                     "base_url": base_url,
-                    "info": {
-                        "subdir": subdir,
-                    },
+                    "subdir": subdir,
                 },
                 "packages": {},
                 "packages.conda": {},
