@@ -82,28 +82,28 @@ runs:
 
         args = [
             "--channel",
-            "${{ inputs.channel }}".strip(),
+            """${{ inputs.channel }}""".strip(),
             "--output",
             "${{ steps.validate.outputs.output-directory }}",
             "--repodata-fn",
-            "${{ inputs.repodata-fn }}".strip(),
+            """${{ inputs.repodata-fn }}""".strip(),
         ]
-        after = "${{ inputs.after }}".strip()
+        after = """${{ inputs.after }}""".strip()
         if after:
             args += ["--after", after]
-        before = "${{ inputs.before }}".strip()
+        before = """${{ inputs.before }}""".strip()
         if before:
             args += ["--before", before]
-        subdirs = "${{ inputs.subdirs }}".strip()
+        subdirs = """${{ inputs.subdirs }}""".strip()
         for subdir in subdirs.split():
             args += ["--subdir", subdir]
-        keep_trees = "${{ inputs.keep-trees }}".strip()
+        keep_trees = """${{ inputs.keep-trees }}""".strip()
         for spec in keep_trees:
             args += ["--keep-tree", spec]
-        keep_specs = "${{ inputs.keep-specs }}".strip()
+        keep_specs = """${{ inputs.keep-specs }}""".strip()
         for spec in keep_specs:
             args += ["--keep", spec]
-        remove_specs = "${{ inputs.remove-specs }}".strip()
+        remove_specs = """${{ inputs.remove-specs }}""".strip()
         for spec in remove_specs:
             args += ["--remove", spec]
 
