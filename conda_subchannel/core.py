@@ -179,12 +179,14 @@ def _write_channel_index_md(source_channel: Channel, channel_path: Path):
         "",
         f"Derived from [{source_channel.name}]({source_channel.base_url})",
         "",
-        ""
+        "",
+        "Available subdirs:",
+        "",
     ]
-    for subdir in channel_path.glob("*"):
+    for subdir in sorted(channel_path.glob("*")):
         if subdir.is_file():
             continue
-        lines[-1] += f"[{subdir.name}]({subdir.name}) "
+        lines.append(f"- [{subdir.name}]({subdir.name})")
     (channel_path / "index.md").write_text("\n".join(lines))
 
 
@@ -192,6 +194,7 @@ def _write_subdir_index_md(subdir_path: Path):
     subdir_path = Path(subdir_path)
     lines = [
         f"# {'/'.join(subdir_path.parts[-2:])}",
+        "",
         "| Filename | Size (B) | Last modified | SHA256 | MD5 |",
         "|----------|----------|---------------|--------|-----|",
     ]

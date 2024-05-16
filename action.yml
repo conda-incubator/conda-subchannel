@@ -49,10 +49,11 @@ runs:
       run: |
         echo "::error title=⛔ error hint::Only Linux is supported"
         exit 1
-    - name: Validate arguments
+    - name: Validate inputs
       shell: bash
       id: validate
       run: |
+        # Validate inputs
         if [[ 
           "${{ inputs.after }}" == "" 
           && "${{ inputs.before }}" == "" 
@@ -71,43 +72,54 @@ runs:
         manifest-path: ${{ github.action_path }}/pyproject.toml
     - name: Setup project
       shell: bash
-      run: cd "${{ github.action_path }}" && pixi run --environment default dev
-    - name: Run subchannel
-      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
       run: |
-        args="--channel ${{ inputs.channel }}"
-        args+=" --output ${{ steps.validate.outputs.output-directory }}"
-        args+=" --repodata-fn ${{ inputs.repodata-fn }}"
-        for subdir in ${{ inputs.subdirs }}; do
-          args+=" --subdir $subdir"
-        done
-        if [[ "${{ inputs.after }}" != "" ]]; then
-          args+=" --after ${{ inputs.after }}"
-        fi
-        if [[ "${{ inputs.before }}" != "" ]]; then
-          args+=" --before ${{ inputs.before }}"
-        fi
-        if [[ "${{ inputs.keep-trees }}" != "" ]]; then
-          for spec in ${{ inputs.keep-trees }}; do
-            args+=" --keep-tree $spec"
-          done
-        fi
-        if [[ "${{ inputs.keep-specs }}" != "" ]]; then
-          for spec in ${{ inputs.keep-specs }}; do
-            args+=" --keep $spec"
-          done
-        fi
-        if [[ "${{ inputs.remove-specs }}" != "" ]]; then
-          for spec in ${{ inputs.remove-specs }}; do
-            args+=" --remove $spec"
-          done
-        fi
-        echo "Running: conda subchannel $args"
-        conda subchannel $args
+        # Install project
+        cd "${{ github.action_path }}"
+        SETUPTOOLS_SCM_PRETEND_VERSION=0.1 pixi run --environment default python -mpip install --no-deps .
+    - name: Prepare command
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default python -u {0}
+      run: |
+        # Prepare and run conda subchannel
+        import subprocess
+        import sys
+
+        args = [
+            "--channel",
+            """${{ inputs.channel }}""".strip(),
+            "--output",
+            "${{ steps.validate.outputs.output-directory }}",
+            "--repodata-fn",
+            """${{ inputs.repodata-fn }}""".strip(),
+        ]
+        after = """${{ inputs.after }}""".strip()
+        if after:
+            args += ["--after", after]
+        before = """${{ inputs.before }}""".strip()
+        if before:
+            args += ["--before", before]
+        subdirs = """${{ inputs.subdirs }}""".strip()
+        for subdir in subdirs.split():
+            args += ["--subdir", subdir]
+        keep_trees = """${{ inputs.keep-trees }}""".strip()
+        for spec in keep_trees.split():
+            args += ["--keep-tree", spec]
+        keep_specs = """${{ inputs.keep-specs }}""".strip()
+        for spec in keep_specs.split():
+            args += ["--keep", spec]
+        remove_specs = """${{ inputs.remove-specs }}""".strip()
+        for spec in remove_specs.split():
+            args += ["--remove", spec]
+
+        print("Running: conda subchannel", *args)
+        p = subprocess.run(
+            [sys.executable, "-mconda", "subchannel", *args],
+        )
+        sys.exit(p.returncode)
     - name: Decide deployment
       id: decide
       shell: bash
       run: |
+        # Decide if we deploy to GH Pages or not
         if [[ "${{ inputs.gh-pages-branch }}" != "" && "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "deploy=true" >> $GITHUB_OUTPUT
         else
@@ -122,3 +134,4 @@ runs:
         publish_dir: ${{ steps.validate.outputs.output-directory }}
         user_name: 'github-actions[bot]'
         user_email: 'github-actions[bot]@users.noreply.github.com'
+        enable_jekyll: true
