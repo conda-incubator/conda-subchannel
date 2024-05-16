@@ -144,9 +144,8 @@ def _reduce_index(
 
 
 def _dump_records(
-    records: dict[tuple[str, str], PackageRecord], source_channel: Channel | str
+    records: dict[tuple[str, str], PackageRecord], base_url: str
 ) -> dict[str, dict[str, Any]]:
-    source_channel = Channel(source_channel)
     repodatas = {}
     for (subdir, filename), record in records.items():
         if subdir not in repodatas:

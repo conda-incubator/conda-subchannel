@@ -8,6 +8,10 @@ inputs:
     description: "Source repodata file to process from channel"
     required: false
     default: "repodata.json"
+  base-url:
+    description: "URL where the packages will be available. Defaults to the base URL for 'channel'"
+    required: false
+    default: ""
   subdirs:
     description: "List of platforms to support, space separated. Defaults to linux-64. Noarch is always included" 
     required: false
@@ -91,6 +95,9 @@ runs:
             "--repodata-fn",
             """${{ inputs.repodata-fn }}""".strip(),
         ]
+        base_url = """${{ inputs.base-url }}""".strip()
+        if base_url:
+            args += ["--base_url", base_url]
         after = """${{ inputs.after }}""".strip()
         if after:
             args += ["--after", after]

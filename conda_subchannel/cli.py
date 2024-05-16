@@ -12,6 +12,7 @@ from conda.exceptions import ArgumentError
 from conda.base.constants import REPODATA_FN
 from conda.base.context import context
 from conda.common.io import Spinner
+from conda.models.channel import Channel
 
 from .core import _fetch_channel, _reduce_index, _dump_records, _write_to_disk
 
@@ -46,6 +47,13 @@ def configure_parser(parser: argparse.ArgumentParser):
         "--repodata-fn",
         default=REPODATA_FN,
         help="Source repodata file to process from channel.",
+    )
+    parser.add_argument(
+        "--base-url",
+        required=False,
+        help="URL where the packages will be available. "
+        "Defaults to the base URL for '--channel'. Only needed if the user wants to mirror "
+        "the required packages separately."
     )
     parser.add_argument(
         "--output",
@@ -123,7 +131,8 @@ def execute(args: argparse.Namespace) -> int:
     print(" - Reduced from", total_count, "to", filtered_count, "records")
 
     with Spinner(f"Writing output to {args.output}"):
-        repodatas = _dump_records(records, args.channel)
+        base_url = args.base_url or Channel(args.channel).base_url
+        repodatas = _dump_records(records, base_url)
         _write_to_disk(args.channel, repodatas, args.output)
 
     return 0
