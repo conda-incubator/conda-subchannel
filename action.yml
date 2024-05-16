@@ -74,38 +74,47 @@ runs:
       run: |
         cd "${{ github.action_path }}"
         SETUPTOOLS_SCM_PRETEND_VERSION=0.1 pixi run --environment default python -mpip install --no-deps .
-    - name: Run subchannel
-      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
+    - name: Prepare command
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default python {0}
       run: |
-        args="--channel ${{ inputs.channel }}"
-        args+=" --output ${{ steps.validate.outputs.output-directory }}"
-        args+=" --repodata-fn ${{ inputs.repodata-fn }}"
-        for subdir in ${{ inputs.subdirs }}; do
-          args+=" --subdir $subdir"
-        done
-        if [[ "${{ inputs.after }}" != "" ]]; then
-          args+=" --after ${{ inputs.after }}"
-        fi
-        if [[ "${{ inputs.before }}" != "" ]]; then
-          args+=" --before ${{ inputs.before }}"
-        fi
-        if [[ "${{ inputs.keep-trees }}" != "" ]]; then
-          for spec in ${{ inputs.keep-trees }}; do
-            args+=" --keep-tree $spec"
-          done
-        fi
-        if [[ "${{ inputs.keep-specs }}" != "" ]]; then
-          for spec in ${{ inputs.keep-specs }}; do
-            args+=" --keep $spec"
-          done
-        fi
-        if [[ "${{ inputs.remove-specs }}" != "" ]]; then
-          for spec in ${{ inputs.remove-specs }}; do
-            args+=" --remove $spec"
-          done
-        fi
-        echo "Running: conda subchannel $args"
-        conda subchannel $args
+        import subprocess
+        import sys
+
+        args = [
+            "--channel",
+            "${{ inputs.channel }}".strip(),
+            "--output",
+            "${{ steps.validate.outputs.output-directory }}",
+            "--repodata-fn",
+            "${{ inputs.repodata-fn }}".strip(),
+        ]
+        after = "${{ inputs.after }}".strip()
+        if after:
+            args += ["--after", after]
+        before = "${{ inputs.before }}".strip()
+        if before:
+            args += ["--before", before]
+        subdirs = "${{ inputs.subdirs }}".strip()
+        for subdir in subdirs.split():
+            args += ["--subdir", subdir]
+        keep_trees = "${{ inputs.keep-trees }}".strip()
+        for spec in keep_trees:
+            args += ["--keep-tree", spec]
+        keep_specs = "${{ inputs.keep-specs }}".strip()
+        for spec in keep_specs:
+            args += ["--keep", spec]
+        remove_specs = "${{ inputs.remove-specs }}".strip()
+        for spec in remove_specs:
+            args += ["--remove", spec]
+
+        print("Running: conda subchannel", *args)
+        p = subprocess.run(
+            [sys.executable, "-mconda", "subchannel", *args],
+        )
+        sys.exit(p.returncode)
+    - name: Run command
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
+      run: conda subchannel $subchannel_cmd
     - name: Decide deployment
       id: decide
       shell: bash
