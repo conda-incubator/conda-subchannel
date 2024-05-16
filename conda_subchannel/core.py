@@ -147,19 +147,39 @@ def _dump_records(
     records: dict[tuple[str, str], PackageRecord], base_url: str
 ) -> dict[str, dict[str, Any]]:
     repodatas = {}
+    record_keys = (
+        "build",
+        "build_number",
+        "constrains",
+        "depends",
+        "license",
+        "md5",
+        "name",
+        "sha256",
+        "size",
+        "subdir",
+        "timestamp",
+        "version",
+    )
     for (subdir, filename), record in records.items():
         if subdir not in repodatas:
             repodatas[subdir] = {
-                "metadata": {
-                    "repodata_version": 2,
-                    "base_url": source_channel.base_url,
-                    "subdir": subdir,
+                "repodata_version": 2,
+                "info": {
+                    "base_url": base_url,
+                    "info": {
+                        "subdir": subdir,
+                    },
                 },
                 "packages": {},
                 "packages.conda": {},
+                "removed": [],
             }
         key = "packages.conda" if record.fn.endswith(".conda") else "packages"
-        repodatas[record.subdir][key][filename] = record.dump()
+        dumped = record.dump()
+        repodatas[record.subdir][key][filename] = {
+            key: dumped[key] for key in record_keys if key in dumped
+        }
     return repodatas
 
 
@@ -205,9 +225,7 @@ def _write_subdir_index_md(subdir_path: Path):
         lastmod = datetime.fromtimestamp(stat.st_mtime)
         sha256 = _checksum(path, "sha256")
         md5 = _checksum(path, "md5")
-        lines.append(
-            f"| [{path.name}]({path.name}) | {size} | {lastmod} | `{sha256}` | `{md5}` |"
-        )
+        lines.append(f"| [{path.name}]({path.name}) | {size} | {lastmod} | `{sha256}` | `{md5}` |")
     lines.append("")
     lines.append(f"> Last modified on {datetime.now(tz=timezone.utc)}")
     (subdir_path / "index.md").write_text("\n".join(lines))
