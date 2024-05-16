@@ -75,7 +75,7 @@ runs:
         cd "${{ github.action_path }}"
         SETUPTOOLS_SCM_PRETEND_VERSION=0.1 pixi run --environment default python -mpip install --no-deps .
     - name: Prepare command
-      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default python {0}
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default python -u {0}
       run: |
         import subprocess
         import sys
@@ -98,13 +98,13 @@ runs:
         for subdir in subdirs.split():
             args += ["--subdir", subdir]
         keep_trees = """${{ inputs.keep-trees }}""".strip()
-        for spec in keep_trees:
+        for spec in keep_trees.split():
             args += ["--keep-tree", spec]
         keep_specs = """${{ inputs.keep-specs }}""".strip()
-        for spec in keep_specs:
+        for spec in keep_specs.split():
             args += ["--keep", spec]
         remove_specs = """${{ inputs.remove-specs }}""".strip()
-        for spec in remove_specs:
+        for spec in remove_specs.split():
             args += ["--remove", spec]
 
         print("Running: conda subchannel", *args)
