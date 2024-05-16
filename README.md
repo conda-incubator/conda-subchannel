@@ -6,7 +6,7 @@ Create subsets of conda channels thanks to CEP-15 metadata
 
 ```bash
 $ conda install -n base conda-subchannel
-$ conda subchannel --channel=conda-forge python=3.9
+$ conda subchannel --channel=conda-forge --keep-tree python=3.9
 $ python -m http.serve --directory subchannel/
 ```
 

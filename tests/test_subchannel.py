@@ -1,3 +1,4 @@
+import json
 import sys
 from datetime import datetime, timezone
 
@@ -210,3 +211,23 @@ def test_between_dates(conda_cli, tmp_path):
                 timestamp_2023 <= rec.timestamp <= timestamp_2024 for rec in sd.iter_records()
             )
     assert tested
+
+def test_base_url(conda_cli, tmp_path):
+    base_url = "https://a-redefined-base.url"
+    out, err, rc = conda_cli(
+        "subchannel",
+        "-c",
+        "conda-forge",
+        "--keep",
+        "python=3.9",
+        "--base-url",
+        base_url,
+        "--output",
+        tmp_path,
+    )
+    print(out)
+    print(err, file=sys.stderr)
+    assert rc == 0
+
+    data = json.loads((tmp_path / context.subdir / "repodata.json").read_text())
+    assert data["info"]["base_url"] == base_url
