@@ -1,0 +1,124 @@
+name: 'conda subchannel'
+description: 'Republish a subset of an existing conda channel'
+inputs:
+  channel:
+    description: "Source conda channel"
+    required: true
+  repodata-fn:
+    description: "Source repodata file to process from channel"
+    required: false
+    default: "repodata.json"
+  subdirs:
+    description: "List of platforms to support, space separated. Defaults to linux-64. Noarch is always included" 
+    required: false
+    default: "linux-64"
+  after:
+    description: "Timestamp as ts:<float> or date as YYYY-[MM[-DD[-HH[-MM[-SS]]]]]"
+    required: false
+    default: ""
+  before:
+    description: "Timestamp as ts:<float> or date as YYYY-[MM[-DD[-HH[-MM[-SS]]]]]"
+    required: false
+    default: ""
+  keep-trees:
+    description: "Keep packages matching these specs and their dependencies. Space separated"
+    required: false
+    default: ""
+  keep-specs:
+    description: "Keep packages matching these specs only. Space separated"
+    required: false
+    default: ""
+  remove-specs:
+    description: "Remove packages matching these specs. Space separated"
+    required: false
+    default: ""
+  gh-pages-branch:
+    description: "Name of the branch for the GH Pages deployment. Set to `''` to disable."
+    required: false
+    default: gh-pages
+outputs:
+  output-directory:
+    description: "Path to the directory containing the subchannel data"
+    value: ${{ steps.validate.outputs.output-path }}
+runs:
+  using: "composite"
+  steps:
+    - name: Check Runner OS
+      if: ${{ runner.os != 'Linux' }}
+      shell: bash
+      run: |
+        echo "::error title=⛔ error hint::Only Linux is supported"
+        exit 1
+    - name: Validate arguments
+      shell: bash
+      id: validate
+      run: |
+        if [[ 
+          "${{ inputs.after }}" == "" 
+          && "${{ inputs.before }}" == "" 
+          && "${{ inputs.keep-trees }}" == "" 
+          && "${{ inputs.keep-specs }}" == "" 
+          && "${{ inputs.remove-specs }}" == "" 
+        ]]; then
+          echo "::error title=⛔ error hint::At least one of `after`, `before`, `keep-trees`, `keep-specs` or `remove-specs` must be set"
+          exit 1
+        fi
+        mkdir -p "${{ runner.temp }}/subchannel"
+        echo "output-directory=${{ runner.temp }}/subchannel" >> $GITHUB_OUTPUT
+    - uses: prefix-dev/setup-pixi@632d17935141ec801697e2c359784b878adecbbe # v0.6.0
+      with:
+        environments: default
+        manifest-path: ${{ github.action_path }}/pyproject.toml
+    - name: Setup project
+      shell: bash
+      run: cd "${{ github.action_path }}" && pixi run --environment default dev
+    - name: Run subchannel
+      shell: pixi run --manifest-path "${{ github.action_path }}/pyproject.toml" --environment default bash -e {0}
+      run: |
+        args="--channel ${{ inputs.channel }}"
+        args+=" --output ${{ steps.validate.outputs.output-directory }}"
+        args+=" --repodata-fn ${{ inputs.repodata-fn }}"
+        for subdir in ${{ inputs.subdirs }}; do
+          args+=" --subdir $subdir"
+        done
+        if [[ "${{ inputs.after }}" != "" ]]; then
+          args+=" --after ${{ inputs.after }}"
+        fi
+        if [[ "${{ inputs.before }}" != "" ]]; then
+          args+=" --before ${{ inputs.before }}"
+        fi
+        if [[ "${{ inputs.keep-trees }}" != "" ]]; then
+          for spec in ${{ inputs.keep-trees }}; do
+            args+=" --keep-tree $spec"
+          done
+        fi
+        if [[ "${{ inputs.keep-specs }}" != "" ]]; then
+          for spec in ${{ inputs.keep-specs }}; do
+            args+=" --keep $spec"
+          done
+        fi
+        if [[ "${{ inputs.remove-specs }}" != "" ]]; then
+          for spec in ${{ inputs.remove-specs }}; do
+            args+=" --remove $spec"
+          done
+        fi
+        echo "Running: conda subchannel $args"
+        conda subchannel $args
+    - name: Decide deployment
+      id: decide
+      shell: bash
+      run: |
+        if [[ "${{ inputs.gh-pages-branch }}" != "" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "deploy=true" >> $GITHUB_OUTPUT
+        else
+          echo "Will skip deployment to GH Pages."
+          echo "deploy=false" >> $GITHUB_OUTPUT
+        fi
+    - uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+      if: steps.decide.outputs.deploy == 'true'
+      with:
+        github_token: ${{ github.token }}
+        publish_branch: ${{ inputs.gh-pages-branch }}
+        publish_dir: ${{ steps.validate.outputs.output-directory }}
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'

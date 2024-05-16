@@ -45,7 +45,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 python = ">=3.8"
 pip = "*"
 conda = ">=23.9"
-conda-index = "*"
+zstandard = "*"
 
 [tool.pixi.tasks]
 dev = 'python -mpip install -e .'

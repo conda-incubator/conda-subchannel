@@ -35,7 +35,13 @@ def date_argument(date: str) -> float:
 
 
 def configure_parser(parser: argparse.ArgumentParser):
-    parser.add_argument("-c", "--channel", required=True, dest="channel")
+    parser.add_argument(
+        "-c",
+        "--channel",
+        required=True,
+        dest="channel",
+        help="Source conda channel.",
+    )
     parser.add_argument(
         "--repodata-fn",
         default=REPODATA_FN,
@@ -93,9 +99,10 @@ def execute(args: argparse.Namespace) -> int:
         raise ArgumentError("Please provide at least one filter.")
 
     with Spinner("Syncing source channel"):
-        subdir_datas = _fetch_channel(
-            args.channel, args.subdirs or context.subdirs, args.repodata_fn
-        )
+        subdirs = args.subdirs or context.subdirs
+        if "noarch" not in subdirs:
+            subdirs = *subdirs, "noarch"
+        subdir_datas = _fetch_channel(args.channel, subdirs, args.repodata_fn)
     for sd in sorted(subdir_datas, key=lambda sd: sd.channel.name):
         print(" -", sd.channel.name, sd.channel.subdir)
 
@@ -117,6 +124,6 @@ def execute(args: argparse.Namespace) -> int:
 
     with Spinner(f"Writing output to {args.output}"):
         repodatas = _dump_records(records, args.channel)
-        _write_to_disk(repodatas, args.output)
+        _write_to_disk(args.channel, repodatas, args.output)
 
     return 0
