@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>{{ subchannel_name }}/{{ subdir }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div id="content">
+      <h1 id="{{ subchannel_name }}-{{ subdir }}">
+        <a href="{{ subchannel_url }}">{{ subchannel_name }}</a>/{{subdir}}
+      </h1>
+
+      <p>Available repodata files:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Size (B)</th>
+            <th>Last modified</th>
+            <th>SHA256</th>
+            <th>MD5</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for repodata in repodatas %}
+          <tr>
+            <td>
+              <a href="{{ repodata['url'] }}">{{ repodata['filename'] }}</a>
+            </td>
+            <td>{{ repodata['size'] }}</td>
+            <td>{{ repodata['last_modified'] }}</td>
+            <td><code>{{ repodata['sha256'] }}</code></td>
+            <td><code>{{ repodata['md5'] }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <blockquote>
+        <p>Last modified on {{ last_modified }}</p>
+      </blockquote>
+    </div>
+  </body>
+</html>

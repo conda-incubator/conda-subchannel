@@ -141,4 +141,4 @@ runs:
         publish_dir: ${{ steps.validate.outputs.output-directory }}
         user_name: 'github-actions[bot]'
         user_email: 'github-actions[bot]@users.noreply.github.com'
-        enable_jekyll: true
+        enable_jekyll: false

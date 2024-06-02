@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <title>{{ subchannel_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div id="content">
+      <h1>
+        <a href="{{ subchannel_url }}"
+          >{{ subchannel_name }}</a
+        >
+      </h1>
+
+      <p>
+        Derived from
+        <a href="{{ source_channel_url }}">{{ source_channel_name }}</a>
+      </p>
+
+      <p>Available subdirs:</p>
+
+      <ul>
+        {% for subdir in subdirs %}
+        <li><a href="{{ subdir }}">{{ subdir }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </body>
+</html>

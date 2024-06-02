@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import jinja2
 import zstandard
 from conda.base.context import context
 from conda.common.io import ThreadLimitedThreadPoolExecutor
@@ -189,44 +190,48 @@ def _checksum(path, algorithm, buffersize=65536):
     return hash_impl.hexdigest()
 
 
-def _write_channel_index_md(source_channel: Channel, channel_path: Path):
+def _write_channel_index_html(source_channel: Channel, channel_path: Path):
+    templates_dir = Path(__file__).parent / "templates"
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
+    template = environment.get_template("channel.j2.html")
     channel_path = Path(channel_path)
-    lines = [
-        f"# {channel_path.name}",
-        "",
-        f"Derived from [{source_channel.name}]({source_channel.base_url})",
-        "",
-        "",
-        "Available subdirs:",
-        "",
-    ]
-    for subdir in sorted(channel_path.glob("*")):
-        if subdir.is_file():
-            continue
-        lines.append(f"- [{subdir.name}]({subdir.name})")
-    (channel_path / "index.md").write_text("\n".join(lines))
+    content = template.render(
+        subchannel_name=channel_path.name,
+        source_channel_url=source_channel.base_url,
+        source_channel_name=source_channel.name,
+        subdirs=[path.name for path in channel_path.glob("*") if path.is_dir()]
+    )
+    (channel_path / "index.html").write_text(content)
+    (channel_path / "style.css").write_text((templates_dir / "style.css").read_text())
 
 
-def _write_subdir_index_md(subdir_path: Path):
-    subdir_path = Path(subdir_path)
-    lines = [
-        f"# {'/'.join(subdir_path.parts[-2:])}",
-        "",
-        "| Filename | Size (B) | Last modified | SHA256 | MD5 |",
-        "|----------|----------|---------------|--------|-----|",
-    ]
+def _write_subdir_index_html(subdir_path: Path):
+    templates_dir = Path(__file__).parent / "templates"
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
+    template = environment.get_template("subdir.j2.html")
+    repodatas = []
     for path in sorted(subdir_path.glob("*")):
-        if path.name == "index.md":
+        if path.name in ("index.md", "index.html"):
             continue
         stat = path.stat()
-        size = stat.st_size
-        lastmod = datetime.fromtimestamp(stat.st_mtime)
-        sha256 = _checksum(path, "sha256")
-        md5 = _checksum(path, "md5")
-        lines.append(f"| [{path.name}]({path.name}) | {size} | {lastmod} | `{sha256}` | `{md5}` |")
-    lines.append("")
-    lines.append(f"> Last modified on {datetime.now(tz=timezone.utc)}")
-    (subdir_path / "index.md").write_text("\n".join(lines))
+        repodatas.append(
+            {
+                "filename": path.name,
+                "url": path.name,
+                "size": stat.st_size,
+                "last_modified": datetime.fromtimestamp(stat.st_mtime),
+                "sha256": _checksum(path, "sha256"),
+                "md5": _checksum(path, "md5"),
+            }
+        )
+    content = template.render(
+        subchannel_name=subdir_path.parent.name,
+        subchannel_url="../",
+        subdir=subdir_path.name,
+        repodatas=repodatas,
+        last_modified=datetime.now(tz=timezone.utc),
+    )
+    (subdir_path / "index.html").write_text(content)
 
 
 def _write_to_disk(
@@ -253,13 +258,13 @@ def _write_to_disk(
                     level=ZSTD_COMPRESS_LEVEL, threads=ZSTD_COMPRESS_THREADS
                 ).compress(json_contents.encode("utf-8"))
                 fo.write(repodata_zst_content)
-        _write_subdir_index_md(path / subdir)
+        _write_subdir_index_html(path / subdir)
 
     # noarch must always be present
     noarch_repodata = path / "noarch" / "repodata.json"
     if not noarch_repodata.is_file():
         noarch_repodata.parent.mkdir(parents=True, exist_ok=True)
         noarch_repodata.write_text("{}")
-        _write_subdir_index_md(path / "noarch")
+        _write_subdir_index_html(path / "noarch")
 
-    _write_channel_index_md(Channel(source_channel), path)
+    _write_channel_index_html(Channel(source_channel), path)
