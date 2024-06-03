@@ -219,7 +219,7 @@ def _write_subdir_index_html(subdir_path: Path):
                 "filename": path.name,
                 "url": path.name,
                 "size": stat.st_size,
-                "last_modified": datetime.fromtimestamp(stat.st_mtime),
+                "last_modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
                 "sha256": _checksum(path, "sha256"),
                 "md5": _checksum(path, "md5"),
             }
