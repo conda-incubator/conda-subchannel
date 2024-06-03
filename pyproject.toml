@@ -46,6 +46,7 @@ python = ">=3.8"
 pip = "*"
 conda = ">=23.9"
 zstandard = "*"
+jinja2 = "*"
 
 [tool.pixi.tasks]
 dev = 'python -mpip install -e .'
