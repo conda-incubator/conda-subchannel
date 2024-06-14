@@ -231,10 +231,11 @@ def _write_subdir_index_html(subdir_path: Path):
         )
         if path.name == "repodata.json":
             repodata = json.loads(path.read_text())
-            base_url = repodata["info"]["base_url"]
-            for key in ("packages", "packages.conda"):
-                for filename in repodata.get(key, ()):
-                    packages.append(filename)
+            if repodata:
+                base_url = repodata["info"]["base_url"]
+                for key in ("packages", "packages.conda"):
+                    for filename in repodata.get(key, ()):
+                        packages.append(filename)
 
     packages.sort(key=_sortkey_package_filenames)
     content = template.render(
