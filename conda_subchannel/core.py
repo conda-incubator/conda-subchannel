@@ -192,7 +192,7 @@ def _checksum(path, algorithm, buffersize=65536):
     return hash_impl.hexdigest()
 
 
-def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_flags: dict[str, Any]):
+def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_flags: dict[str, Any], served_at: str | None = None):
     templates_dir = Path(__file__).parent / "templates"
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("channel.j2.html")
@@ -203,6 +203,7 @@ def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_f
         source_channel_name=source_channel.name,
         subdirs=[path.name for path in channel_path.glob("*") if path.is_dir()],
         cli_flags=cli_flags,
+        subchannel_url=served_at or "",
     )
     (channel_path / "index.html").write_text(content)
     (channel_path / "style.css").write_text((templates_dir / "style.css").read_text())
@@ -255,6 +256,7 @@ def _write_to_disk(
     repodatas: dict[str, dict[str, Any]],
     path: os.PathLike | str,
     cli_flags: dict[str, Any],
+    served_at: str | None = None,
     outputs: Iterable[str] = ("bz2", "zstd"),
 ):
     path = Path(path)
@@ -284,7 +286,7 @@ def _write_to_disk(
         noarch_repodata.write_text("{}")
         _write_subdir_index_html(path / "noarch")
 
-    _write_channel_index_html(Channel(source_channel), path, cli_flags)
+    _write_channel_index_html(Channel(source_channel), path, cli_flags, served_at)
 
 
 def _sortkey_package_filenames(fn: str):
