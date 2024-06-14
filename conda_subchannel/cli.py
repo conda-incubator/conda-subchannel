@@ -114,15 +114,17 @@ def execute(args: argparse.Namespace) -> int:
     for sd in sorted(subdir_datas, key=lambda sd: sd.channel.name):
         print(" -", sd.channel.name, sd.channel.subdir)
 
+    kwargs = {
+        "subdir_datas": subdir_datas,
+        "specs_to_keep": args.keep,
+        "specs_to_remove": args.remove,
+        "trees_to_keep": args.keep_tree,
+        "after": args.after,
+        "before": args.before,
+    }
     with Spinner("Filtering package records"):
-        records = _reduce_index(
-            subdir_datas=subdir_datas,
-            specs_to_keep=args.keep,
-            specs_to_remove=args.remove,
-            trees_to_keep=args.keep_tree,
-            after=args.after,
-            before=args.before,
-        )
+
+        records = _reduce_index(**kwargs)
     total_count = sum(len(sd._package_records) for sd in subdir_datas)
     filtered_count = len(records)
     if total_count == filtered_count:
@@ -133,6 +135,7 @@ def execute(args: argparse.Namespace) -> int:
     with Spinner(f"Writing output to {args.output}"):
         base_url = args.base_url or Channel(args.channel).base_url
         repodatas = _dump_records(records, base_url)
-        _write_to_disk(args.channel, repodatas, args.output)
+        kwargs.pop("subdir_datas")
+        _write_to_disk(args.channel, repodatas, args.output, cli_flags=kwargs)
 
     return 0

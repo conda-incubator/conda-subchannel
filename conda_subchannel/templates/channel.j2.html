@@ -16,7 +16,16 @@
       <p>
         Derived from
         <a href="{{ source_channel_url }}">{{ source_channel_name }}</a>
+        with the following flags:
       </p>
+
+      <ul>
+      {% for flag, value in cli_flags.items()|sort %}
+        {% if value %}
+        <li><code>{{ flag }}</code>: <code>{{ value }}</code></li>
+        {% endif %}
+      {% endfor %}
+      </ul>
 
       <p>Available subdirs:</p>
 
