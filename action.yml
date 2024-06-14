@@ -43,7 +43,7 @@ inputs:
 outputs:
   output-directory:
     description: "Path to the directory containing the subchannel data"
-    value: ${{ steps.validate.outputs.output-path }}
+    value: ${{ steps.validate.outputs.output-directory }}
 runs:
   using: "composite"
   steps:
