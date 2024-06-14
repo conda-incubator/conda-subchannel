@@ -37,6 +37,16 @@
         </tbody>
       </table>
       <p>
+        <details>
+          <summary>Show {{ packages|length }} packages</summary>
+          <ul>
+          {% for package in packages %}
+            <li><a href="{{ base_url + '/' + subdir + '/' + package }}" target="_blank">{{ package }}</a></li>
+          {% endfor %}
+          </ul>
+        </details>
+      </p>
+      <p>
         <small>Last modified on {{ last_modified.strftime('%Y-%m-%d %H:%M:%S %Z') }}</small>
       </p>
     </div>

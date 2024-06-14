@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import bz2
 import hashlib
 import json
@@ -16,6 +17,7 @@ from conda.base.constants import REPODATA_FN
 from conda.core.subdir_data import SubdirData
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
+from conda.models.version import VersionOrder
 
 if TYPE_CHECKING:
     import os
@@ -190,7 +192,7 @@ def _checksum(path, algorithm, buffersize=65536):
     return hash_impl.hexdigest()
 
 
-def _write_channel_index_html(source_channel: Channel, channel_path: Path):
+def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_flags: dict[str, Any]):
     templates_dir = Path(__file__).parent / "templates"
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("channel.j2.html")
@@ -199,7 +201,8 @@ def _write_channel_index_html(source_channel: Channel, channel_path: Path):
         subchannel_name=channel_path.name,
         source_channel_url=source_channel.base_url,
         source_channel_name=source_channel.name,
-        subdirs=[path.name for path in channel_path.glob("*") if path.is_dir()]
+        subdirs=[path.name for path in channel_path.glob("*") if path.is_dir()],
+        cli_flags=cli_flags,
     )
     (channel_path / "index.html").write_text(content)
     (channel_path / "style.css").write_text((templates_dir / "style.css").read_text())
@@ -210,6 +213,8 @@ def _write_subdir_index_html(subdir_path: Path):
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("subdir.j2.html")
     repodatas = []
+    packages = []
+    base_url = None
     for path in sorted(subdir_path.glob("*")):
         if path.name in ("index.md", "index.html"):
             continue
@@ -224,12 +229,23 @@ def _write_subdir_index_html(subdir_path: Path):
                 "md5": _checksum(path, "md5"),
             }
         )
+        if path.name == "repodata.json":
+            repodata = json.loads(path.read_text())
+            if repodata:
+                base_url = repodata["info"]["base_url"]
+                for key in ("packages", "packages.conda"):
+                    for filename in repodata.get(key, ()):
+                        packages.append(filename)
+
+    packages.sort(key=_sortkey_package_filenames)
     content = template.render(
         subchannel_name=subdir_path.parent.name,
         subchannel_url="../",
         subdir=subdir_path.name,
         repodatas=repodatas,
         last_modified=datetime.now(tz=timezone.utc),
+        base_url=base_url,
+        packages=packages,
     )
     (subdir_path / "index.html").write_text(content)
 
@@ -238,6 +254,7 @@ def _write_to_disk(
     source_channel: Channel | str,
     repodatas: dict[str, dict[str, Any]],
     path: os.PathLike | str,
+    cli_flags: dict[str, Any],
     outputs: Iterable[str] = ("bz2", "zstd"),
 ):
     path = Path(path)
@@ -267,4 +284,16 @@ def _write_to_disk(
         noarch_repodata.write_text("{}")
         _write_subdir_index_html(path / "noarch")
 
-    _write_channel_index_html(Channel(source_channel), path)
+    _write_channel_index_html(Channel(source_channel), path, cli_flags)
+
+
+def _sortkey_package_filenames(fn: str):
+    basename, ext = os.path.splitext(fn)
+    name, version, build = basename.rsplit("-", 2)
+    build_number = build
+    if "_" in build:
+        for field in build.split("_"):
+            if field.isdigit():
+                build_number = field
+                break
+    return name, VersionOrder(version), build_number, ext
