@@ -212,6 +212,7 @@ def test_between_dates(conda_cli, tmp_path):
             )
     assert tested
 
+
 def test_base_url(conda_cli, tmp_path):
     base_url = "https://a-redefined-base.url"
     out, err, rc = conda_cli(
@@ -231,3 +232,24 @@ def test_base_url(conda_cli, tmp_path):
 
     data = json.loads((tmp_path / context.subdir / "repodata.json").read_text())
     assert data["info"]["base_url"] == base_url
+
+
+def test_served_at(conda_cli, tmp_path):
+    served_at = "https://my-fancy-channel.url"
+    out, err, rc = conda_cli(
+        "subchannel",
+        "-c",
+        "conda-forge",
+        "--keep",
+        "python=3.9",
+        "--served-at",
+        served_at,
+        "--output",
+        tmp_path,
+    )
+    print(out)
+    print(err, file=sys.stderr)
+    assert rc == 0
+
+    for path in tmp_path.glob("**/index.html"):
+        assert served_at in path.read_text()
