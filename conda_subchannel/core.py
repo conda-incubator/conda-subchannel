@@ -209,7 +209,7 @@ def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_f
     (channel_path / "style.css").write_text((templates_dir / "style.css").read_text())
 
 
-def _write_subdir_index_html(subdir_path: Path):
+def _write_subdir_index_html(subdir_path: Path, served_at: str | None = None):
     templates_dir = Path(__file__).parent / "templates"
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("subdir.j2.html")
@@ -220,10 +220,11 @@ def _write_subdir_index_html(subdir_path: Path):
         if path.name in ("index.md", "index.html"):
             continue
         stat = path.stat()
+        url = "/".join([served_at, subdir_path.name, path.name]) if served_at else path.name
         repodatas.append(
             {
                 "filename": path.name,
-                "url": path.name,
+                "url": url,
                 "size": stat.st_size,
                 "last_modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc),
                 "sha256": _checksum(path, "sha256"),
@@ -277,14 +278,14 @@ def _write_to_disk(
                     level=ZSTD_COMPRESS_LEVEL, threads=ZSTD_COMPRESS_THREADS
                 ).compress(json_contents.encode("utf-8"))
                 fo.write(repodata_zst_content)
-        _write_subdir_index_html(path / subdir)
+        _write_subdir_index_html(path / subdir, served_at)
 
     # noarch must always be present
     noarch_repodata = path / "noarch" / "repodata.json"
     if not noarch_repodata.is_file():
         noarch_repodata.parent.mkdir(parents=True, exist_ok=True)
         noarch_repodata.write_text("{}")
-        _write_subdir_index_html(path / "noarch")
+        _write_subdir_index_html(path / "noarch", served_at)
 
     _write_channel_index_html(Channel(source_channel), path, cli_flags, served_at)
 
