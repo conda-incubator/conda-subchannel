@@ -5,6 +5,10 @@ inputs:
     description: "Name of the subchannel that will be created"
     required: false
     default: "subchannel"
+  served-at:
+    description: "URL where the subchannel files will be uploaded to"
+    required: false
+    default: ""
   channel:
     description: "Source conda channel"
     required: true
@@ -99,9 +103,12 @@ runs:
             "--repodata-fn",
             """${{ inputs.repodata-fn }}""".strip(),
         ]
+        served_at = """${{ inputs.served-at }}""".strip()
+        if served_at:
+            args += ["--served-at", served_at]
         base_url = """${{ inputs.base-url }}""".strip()
         if base_url:
-            args += ["--base_url", base_url]
+            args += ["--base-url", base_url]
         after = """${{ inputs.after }}""".strip()
         if after:
             args += ["--after", after]

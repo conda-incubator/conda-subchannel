@@ -53,13 +53,19 @@ def configure_parser(parser: argparse.ArgumentParser):
         required=False,
         help="URL where the packages will be available. "
         "Defaults to the base URL for '--channel'. Only needed if the user wants to mirror "
-        "the required packages separately."
+        "the required packages separately.",
     )
     parser.add_argument(
         "--output",
         default="subchannel",
         metavar="PATH",
         help="Directory where the subchannel repodata.json artifacts will be written to.",
+    )
+    parser.add_argument(
+        "--served-at",
+        metavar="URL",
+        help="URL or location where the subchannel files will be eventually served. "
+        "Used for the HTML output.",
     )
     parser.add_argument(
         "--subdir",
@@ -123,7 +129,6 @@ def execute(args: argparse.Namespace) -> int:
         "before": args.before,
     }
     with Spinner("Filtering package records"):
-
         records = _reduce_index(**kwargs)
     total_count = sum(len(sd._package_records) for sd in subdir_datas)
     filtered_count = len(records)
@@ -136,6 +141,12 @@ def execute(args: argparse.Namespace) -> int:
         base_url = args.base_url or Channel(args.channel).base_url
         repodatas = _dump_records(records, base_url)
         kwargs.pop("subdir_datas")
-        _write_to_disk(args.channel, repodatas, args.output, cli_flags=kwargs)
+        _write_to_disk(
+            args.channel,
+            repodatas,
+            args.output,
+            cli_flags=kwargs,
+            served_at=args.served_at,
+        )
 
     return 0

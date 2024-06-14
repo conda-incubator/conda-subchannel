@@ -34,6 +34,17 @@
         <li><a href="{{ subdir }}">{{ subdir }}</a></li>
         {% endfor %}
       </ul>
+
+      <p>You can use this subchannel with the URL <code id="channel-url">{{ subchannel_url }}</code></p>
+      <p>For example, with <code>conda</code>:</p>
+      <pre>
+        <code>$ conda create -n new-channel --override-channel -c <span id="channel-url">{{ subchannel_url }}</span></code>
+      </pre>
     </div>
+    {% if not subchannel_url %}
+    <script type="text/javascript">
+      document.querySelectorAll("#channel-url").forEach((elem => elem.innerText = window.location));
+    </script>
+    {% endif %}
   </body>
 </html>
