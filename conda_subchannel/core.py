@@ -74,12 +74,14 @@ def _reduce_index(
     subdir_datas: Iterable[SubdirData],
     specs_to_keep: Iterable[str | MatchSpec] | None = None,
     specs_to_remove: Iterable[str | MatchSpec] | None = None,
+    specs_to_prune: Iterable[str | MatchSpec] | None = None,
     trees_to_keep: Iterable[str | MatchSpec] | None = None,
     after: int | None = None,
     before: int | None = None,
 ) -> dict[tuple[str, str], PackageRecord]:
     specs_to_keep = [MatchSpec(spec) for spec in (specs_to_keep or ())]
     specs_to_remove = [MatchSpec(spec) for spec in (specs_to_remove or ())]
+    specs_to_prune = [MatchSpec(spec) for spec in (specs_to_prune or ())]
     trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
     if trees_to_keep or specs_to_keep or after is not None or before is not None:
         records = {}
@@ -136,10 +138,22 @@ def _reduce_index(
 
     # Now that we know what to keep, we remove stuff
     to_remove = set()
+
+    # Of the packages that survived the keeping, we will remove the ones that do not match the
+    # prune filter
+    for spec in specs_to_prune:
+        for key, record in records.items():
+            if spec.name != record.name:
+                continue  # ignore if the name doesn't match
+            if not spec.match(record):
+                to_remove.add(key)
+
+    # These are the explicit removals; if you match this, you are out
     for spec in specs_to_remove:
         for key, record in records.items():
             if spec.match(record):
                 to_remove.add(key)
+    
     for key in to_remove:
         records.pop(key)
 

@@ -46,7 +46,7 @@ def test_only_python(conda_cli, tmp_path):
     assert tested
 
 
-def test_python_tree(conda_cli, tmp_path, monkeypatch):
+def test_python_tree(conda_cli, tmp_path):
     spec = "python=3.9"
     channel_path = tmp_path / "channel"
     out, err, rc = conda_cli(
@@ -102,6 +102,19 @@ def test_python_tree(conda_cli, tmp_path, monkeypatch):
             "--channel",
             channel_path,
             "python=3.10",
+        )
+
+    # This should fail too; nodejs doesn't match python=3.9, so it must be out
+    with pytest.raises(PackagesNotFoundError):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "nodejs",
         )
 
 
@@ -253,3 +266,60 @@ def test_served_at(conda_cli, tmp_path):
 
     for path in tmp_path.glob("**/index.html"):
         assert served_at in path.read_text()
+
+
+def test_pruned_python(conda_cli, tmp_path):
+    spec = "python=3.9"
+    channel_path = tmp_path / "channel"
+    out, err, rc = conda_cli(
+        "subchannel",
+        "-c",
+        "conda-forge",
+        "--prune",
+        spec,
+        "--output",
+        channel_path,
+    )
+    print(out)
+    print(err, file=sys.stderr)
+    assert rc == 0
+
+    # This should be solvable, we didn't remove anything other than non-39 pythons
+    with pytest.raises(DryRunExit):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "python=3.9",
+        )
+
+    # This should be unsolvable, we didn't take Python 3.10 in the subchannel
+    with pytest.raises(PackagesNotFoundError):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "python=3.10",
+        )
+
+    # This should work because, we just removed pythons that are not python=3.9, but the rest
+    # of the conda-forge packages should be there
+    with pytest.raises(DryRunExit):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "nodejs",
+        )
