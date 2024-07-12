@@ -101,6 +101,12 @@ def configure_parser(parser: argparse.ArgumentParser):
         help="Keep packages matching this spec only. Can be used several times.",
     )
     parser.add_argument(
+        "--prune",
+        metavar="SPEC",
+        action="append",
+        help="Remove the distributions of this package name that do not match this spec.",
+    )
+    parser.add_argument(
         "--remove",
         metavar="SPEC",
         action="append",
@@ -109,7 +115,7 @@ def configure_parser(parser: argparse.ArgumentParser):
 
 
 def execute(args: argparse.Namespace) -> int:
-    if not any([args.after, args.before, args.keep, args.remove, args.keep_tree]):
+    if not any([args.after, args.before, args.keep, args.remove, args.keep_tree, args.prune]):
         raise ArgumentError("Please provide at least one filter.")
 
     with Spinner("Syncing source channel"):
@@ -124,6 +130,7 @@ def execute(args: argparse.Namespace) -> int:
         "subdir_datas": subdir_datas,
         "specs_to_keep": args.keep,
         "specs_to_remove": args.remove,
+        "specs_to_prune": args.prune,
         "trees_to_keep": args.keep_tree,
         "after": args.after,
         "before": args.before,
