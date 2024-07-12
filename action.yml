@@ -40,6 +40,10 @@ inputs:
     description: "Keep packages matching these specs only. Space separated"
     required: false
     default: ""
+  prune-specs:
+    description: "Remove the distributions (within the corresponding package name) that do not match these specs. Space separated"
+    required: false
+    default: ""
   remove-specs:
     description: "Remove packages matching these specs. Space separated"
     required: false
@@ -71,6 +75,7 @@ runs:
           && "${{ inputs.before }}" == "" 
           && "${{ inputs.keep-trees }}" == "" 
           && "${{ inputs.keep-specs }}" == "" 
+          && "${{ inputs.prune-specs }}" == "" 
           && "${{ inputs.remove-specs }}" == "" 
         ]]; then
           echo "::error title=⛔ error hint::At least one of `after`, `before`, `keep-trees`, `keep-specs` or `remove-specs` must be set"
@@ -124,6 +129,9 @@ runs:
         keep_specs = """${{ inputs.keep-specs }}""".strip()
         for spec in keep_specs.split():
             args += ["--keep", spec]
+        prune_specs = """${{ inputs.prune-specs }}""".strip()
+        for spec in prune_specs.split():
+            args += ["--prune", spec]
         remove_specs = """${{ inputs.remove-specs }}""".strip()
         for spec in remove_specs.split():
             args += ["--remove", spec]
