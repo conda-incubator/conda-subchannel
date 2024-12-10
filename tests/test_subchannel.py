@@ -353,7 +353,7 @@ def test_remove_depends(conda_cli, tmp_path):
             "--channel",
             channel_path,
             "python=3.10",
-            "numpy",
+            "pyarrow",
         )
 
     # This fails as we removed all numpy builds for 3.9
@@ -367,5 +367,5 @@ def test_remove_depends(conda_cli, tmp_path):
             "--channel",
             channel_path,
             "python=3.9",
-            "numpy",
+            "pyarrow",
         )
