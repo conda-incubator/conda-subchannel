@@ -112,10 +112,25 @@ def configure_parser(parser: argparse.ArgumentParser):
         action="append",
         help="Remove packages matching this spec. Can be used several times.",
     )
+    parser.add_argument(
+        "--remove-depends",
+        action="append",
+        help="Remove packages that have a dependency on this pattern. Can be used several times.",
+    )
 
 
 def execute(args: argparse.Namespace) -> int:
-    if not any([args.after, args.before, args.keep, args.remove, args.keep_tree, args.prune]):
+    if not any(
+        [
+            args.after,
+            args.before,
+            args.keep,
+            args.remove,
+            args.keep_tree,
+            args.prune,
+            args.remove_depends,
+        ]
+    ):
         raise ArgumentError("Please provide at least one filter.")
 
     with Spinner("Syncing source channel"):
@@ -130,6 +145,7 @@ def execute(args: argparse.Namespace) -> int:
         "subdir_datas": subdir_datas,
         "specs_to_keep": args.keep,
         "specs_to_remove": args.remove,
+        "specs_depends_to_remove": args.remove_depends,
         "specs_to_prune": args.prune,
         "trees_to_keep": args.keep_tree,
         "after": args.after,

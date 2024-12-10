@@ -8,6 +8,7 @@ from conda.core.subdir_data import SubdirData
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.exceptions import ArgumentError, DryRunExit, PackagesNotFoundError
+from conda_libmamba_solver.exceptions import LibMambaUnsatisfiableError
 from conda.testing import conda_cli  # noqa
 
 
@@ -322,4 +323,49 @@ def test_pruned_python(conda_cli, tmp_path):
             "--channel",
             channel_path,
             "nodejs",
+        )
+
+
+def test_remove_depends(conda_cli, tmp_path):
+    spec = "python_abi 3.9.*"
+    channel_path = tmp_path / "channel"
+    out, err, rc = conda_cli(
+        "subchannel",
+        "-c",
+        "conda-forge",
+        "--remove-depends",
+        spec,
+        "--output",
+        channel_path,
+    )
+    print(out)
+    print(err, file=sys.stderr)
+    assert rc == 0
+
+    # This should be solvable, we didn't remove anything for Python 3.10
+    with pytest.raises(DryRunExit):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "python=3.10",
+            "numpy",
+        )
+
+    # This fails as we removed all numpy builds for 3.9
+    with pytest.raises(LibMambaUnsatisfiableError):
+        conda_cli(
+            "create",
+            "--dry-run",
+            "-n",
+            "unused",
+            "--override-channels",
+            "--channel",
+            channel_path,
+            "python=3.9",
+            "numpy",
         )
