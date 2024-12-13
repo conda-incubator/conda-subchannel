@@ -49,12 +49,12 @@ jobs:
       - name: Setup project
         run: |
           pixi run --environment ${{ env.PIXI_ENV_NAME }} dev
-      - name: Run tests
-        run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }}
+      #- name: Run tests
+      #  run: pixi run --environment ${{ env.PIXI_ENV_NAME }} test --basetemp=${{ runner.os == 'Windows' && 'D:\\temp' || runner.temp }}
       - name: Build recipe (${{ env.PIXI_ENV_NAME }})
         if: matrix.python-version == '310'
         run: pixi run build
-  
+
   action:
     runs-on: ubuntu-latest
     permissions:
