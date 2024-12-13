@@ -36,6 +36,7 @@ test:
   commands:
     - python -c "import conda_subchannel"
     - conda subchannel --help  # [not win]
+    - conda subchannel --help  # [win]
 
 about:
   home: https://github.com/jaimergp/conda-subchannel
