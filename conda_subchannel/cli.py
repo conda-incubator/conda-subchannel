@@ -112,10 +112,15 @@ def configure_parser(parser: argparse.ArgumentParser):
         action="append",
         help="Remove packages matching this spec. Can be used several times.",
     )
-
+    parser.add_argument(
+        "--all",
+        default=False,
+        action="store_true",
+        help="Select all records. Ignores all other filters, but respects subdirs.",
+    )
 
 def execute(args: argparse.Namespace) -> int:
-    if not any([args.after, args.before, args.keep, args.remove, args.keep_tree, args.prune]):
+    if not args.all and not any([args.after, args.before, args.keep, args.remove, args.keep_tree, args.prune]):
         raise ArgumentError("Please provide at least one filter.")
 
     with Spinner("Syncing source channel"):
@@ -139,10 +144,13 @@ def execute(args: argparse.Namespace) -> int:
         records = _reduce_index(**kwargs)
     total_count = sum(len(sd._package_records) for sd in subdir_datas)
     filtered_count = len(records)
-    if total_count == filtered_count:
-        print(" - Didn't filter any records!")
-        return 1
-    print(" - Reduced from", total_count, "to", filtered_count, "records")
+    if args.all:
+        print(" - Selecting all records!")
+    else:
+        if total_count == filtered_count:
+            print(" - Didn't filter any records!")
+            return 1
+        print(" - Reduced from", total_count, "to", filtered_count, "records")
 
     with Spinner(f"Writing output to {args.output}"):
         base_url = args.base_url or Channel(args.channel).base_url
