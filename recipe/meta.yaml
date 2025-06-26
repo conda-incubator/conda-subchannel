@@ -34,7 +34,10 @@ test:
     - conda_subchannel
     - conda_subchannel.cli
   commands:
-    - conda subchannel --help
+    - python -c "import conda_subchannel"
+    - conda subchannel --help  # [not win]
+    - call %CONDA_PREFIX%\condabin\conda.bat subchannel --help # [win]
+    - conda subchannel --help  # [win]
 
 about:
   home: https://github.com/jaimergp/conda-subchannel
