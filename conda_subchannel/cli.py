@@ -11,8 +11,13 @@ from datetime import datetime, timezone
 from conda.exceptions import ArgumentError
 from conda.base.constants import REPODATA_FN
 from conda.base.context import context
-from conda.common.io import Spinner
 from conda.models.channel import Channel
+
+try:
+    from conda.common.io import Spinner
+except ImportError:
+    from conda.reporters import get_spinner as Spinner
+
 
 from .core import _fetch_channel, _reduce_index, _dump_records, _write_to_disk
 

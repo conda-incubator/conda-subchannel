@@ -34,7 +34,7 @@ test:
     - conda_subchannel
     - conda_subchannel.cli
   commands:
-    - conda subchannel --help
+    - python -m conda subchannel --help
 
 about:
   home: https://github.com/jaimergp/conda-subchannel
