@@ -37,7 +37,7 @@ homepage = "https://github.com/jaimergp/conda-subchannel"
 [project.entry-points.conda]
 conda-subchannel = "conda_subchannel.plugin"
 
-[tool.pixi.project]
+[tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
