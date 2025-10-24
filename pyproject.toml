@@ -32,7 +32,7 @@ dynamic = [
 ]
 
 [project.urls]
-homepage = "https://github.com/jaimergp/conda-subchannel"
+homepage = "https://github.com/conda-incubator/conda-subchannel"
 
 [project.entry-points.conda]
 conda-subchannel = "conda_subchannel.plugin"
