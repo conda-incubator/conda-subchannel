@@ -94,6 +94,8 @@ def test_python_tree(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "python=3.9",
         )
 
@@ -107,6 +109,8 @@ def test_python_tree(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "python=3.10",
         )
 
@@ -120,6 +124,8 @@ def test_python_tree(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "nodejs",
         )
 
