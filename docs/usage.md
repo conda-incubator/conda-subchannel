@@ -40,7 +40,7 @@ In the first phase, we _select_ which records are going to be kept. Everything e
 1. A selection list is built. Records in this list are added if:
   - They match specs in `--keep-tree`, or any of the dependencies in their tree (assessed recursively).
   - They match any of the specs in `--keep`.
-  - Their timestamp is within the limits marked by `--before` and `--after`, when applicable. 
+  - Their timestamp is within the limits marked by `--before` and `--after`, when applicable.
 2. At this point, records that didn't make it to the selection list are removed.
 3. The specs defined `--prune` are processed. Records that have the same name but don't match the spec are removed. Everything else is ignored.
 4. Records matching any of the specs in `--remove` are filtered out.
