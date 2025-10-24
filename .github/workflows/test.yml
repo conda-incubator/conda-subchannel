@@ -29,13 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["38", "39", "310", "311"]
-        include:
-          - os: macos-15-intel
-            python-version: "310"
-          - os: macos-latest
-            python-version: "311"
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
+        python-version: ["310", "311", "312", "313"]
     env:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
     steps:
@@ -54,7 +49,7 @@ jobs:
       - name: Build recipe (${{ env.PIXI_ENV_NAME }})
         if: matrix.python-version == '310'
         run: pixi run build
-  
+
   action:
     runs-on: ubuntu-latest
     permissions:
@@ -67,5 +62,5 @@ jobs:
       - uses: ./
         with:
           channel: conda-forge
-          keep-trees: python=3.9
+          keep-trees: python=3.12
           gh-pages-branch: ''  # disable on main
