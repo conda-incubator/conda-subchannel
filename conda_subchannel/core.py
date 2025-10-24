@@ -153,7 +153,7 @@ def _reduce_index(
         for key, record in records.items():
             if spec.match(record):
                 to_remove.add(key)
-    
+
     for key in to_remove:
         records.pop(key)
 
@@ -206,7 +206,12 @@ def _checksum(path, algorithm, buffersize=65536):
     return hash_impl.hexdigest()
 
 
-def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_flags: dict[str, Any], served_at: str | None = None):
+def _write_channel_index_html(
+    source_channel: Channel,
+    channel_path: Path,
+    cli_flags: dict[str, Any],
+    served_at: str | None = None,
+):
     templates_dir = Path(__file__).parent / "templates"
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("channel.j2.html")

@@ -29,7 +29,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: jaimergp/conda-subchannel@main
+      - uses: conda-incubator/conda-subchannel@main
         with:
           channel: conda-forge
           keep-trees: python=3.9

@@ -21,7 +21,7 @@ inputs:
     required: false
     default: ""
   subdirs:
-    description: "List of platforms to support, space separated. Defaults to linux-64. Noarch is always included" 
+    description: "List of platforms to support, space separated. Defaults to linux-64. Noarch is always included"
     required: false
     default: "linux-64"
   after:
@@ -70,13 +70,13 @@ runs:
       id: validate
       run: |
         # Validate inputs
-        if [[ 
-          "${{ inputs.after }}" == "" 
-          && "${{ inputs.before }}" == "" 
-          && "${{ inputs.keep-trees }}" == "" 
-          && "${{ inputs.keep-specs }}" == "" 
-          && "${{ inputs.prune-specs }}" == "" 
-          && "${{ inputs.remove-specs }}" == "" 
+        if [[
+          "${{ inputs.after }}" == ""
+          && "${{ inputs.before }}" == ""
+          && "${{ inputs.keep-trees }}" == ""
+          && "${{ inputs.keep-specs }}" == ""
+          && "${{ inputs.prune-specs }}" == ""
+          && "${{ inputs.remove-specs }}" == ""
         ]]; then
           echo "::error title=⛔ error hint::At least one of `after`, `before`, `keep-trees`, `keep-specs` or `remove-specs` must be set"
           exit 1

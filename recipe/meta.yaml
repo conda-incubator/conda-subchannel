@@ -37,8 +37,8 @@ test:
     - python -m conda subchannel --help
 
 about:
-  home: https://github.com/jaimergp/conda-subchannel
+  home: https://github.com/conda-incubator/conda-subchannel
   license: MIT
   license_file: LICENSE
   summary: Create subsets of conda channels thanks to CEP-15 metadata
-  dev_url: https://github.com/jaimergp/conda-subchannel
+  dev_url: https://github.com/conda-incubator/conda-subchannel

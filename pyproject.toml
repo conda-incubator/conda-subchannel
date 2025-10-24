@@ -14,15 +14,14 @@ classifiers = [
   "License :: OSI Approved :: BSD License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "conda >=23.9",
   "zstandard",
@@ -32,7 +31,7 @@ dynamic = [
 ]
 
 [project.urls]
-homepage = "https://github.com/jaimergp/conda-subchannel"
+homepage = "https://github.com/conda-incubator/conda-subchannel"
 
 [project.entry-points.conda]
 conda-subchannel = "conda_subchannel.plugin"
@@ -42,9 +41,9 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tool.pixi.dependencies]
-python = ">=3.8"
+python = ">=3.10"
 pip = "*"
-conda = ">=23.9"
+conda = ">=24.9"
 zstandard = "*"
 jinja2 = "*"
 
@@ -52,7 +51,7 @@ jinja2 = "*"
 dev = 'python -mpip install -e .'
 
 [tool.pixi.feature.build]
-dependencies = { conda-build = "*" }
+dependencies = { conda-build = ">=24.11.0" }
 tasks = { build = "conda build recipe" }
 
 [tool.pixi.feature.docs.tasks]
@@ -73,18 +72,13 @@ sphinx-sitemap = "*"
 
 [tool.pixi.feature.test.tasks]
 dev = 'python -mpip install -e .'
-test = 'python -mpytest -vvv'
+test = 'python -mpytest -vvv -n auto'
 pre-commit = 'pre-commit'
 
 [tool.pixi.feature.test.dependencies]
 pytest = "7.4.3.*"
+pytest-xdist = "*"
 pre-commit = "*"
-
-[tool.pixi.feature.py38.dependencies]
-python = "3.8.*"
-
-[tool.pixi.feature.py39.dependencies]
-python = "3.9.*"
 
 [tool.pixi.feature.py310.dependencies]
 python = "3.10.*"
@@ -95,14 +89,16 @@ python = "3.11.*"
 [tool.pixi.feature.py312.dependencies]
 python = "3.12.*"
 
+[tool.pixi.feature.py313.dependencies]
+python = "3.13.*"
+
 [tool.pixi.environments]
 build = ["build"]
 docs = ["docs"]
-test-py38 = ["test", "py38"]
-test-py39 = ["test", "py39"]
 test-py310 = ["test", "py310"]
 test-py311 = ["test", "py311"]
 test-py312 = ["test", "py312"]
+test-py313 = ["test", "py313"]
 
 [tool.hatch.version]
 source = "vcs"
