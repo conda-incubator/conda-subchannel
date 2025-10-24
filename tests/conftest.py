@@ -19,8 +19,9 @@ def configure_conda_cache(tmp_path_factory):
     os.environ["CONDA_PKGS_DIRS"] = str(cache_dir / "pkgs")
     os.environ["CONDA_REPODATA_CACHE_DIR"] = str(cache_dir / "repodata_cache")
     
-    # Enable local repodata cache (this is on by default but let's be explicit)
-    os.environ["CONDA_LOCAL_REPODATA_TTL"] = "86400"  # 24 hours
+    # Enable aggressive local repodata caching for faster test runs
+    os.environ["CONDA_LOCAL_REPODATA_TTL"] = "604800"  # 7 days
+    os.environ["CONDA_REPODATA_USE_CACHE"] = "true"  # Always use cache when available
     
     return cache_dir
 

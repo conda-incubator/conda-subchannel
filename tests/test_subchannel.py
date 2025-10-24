@@ -23,12 +23,15 @@ def test_noop_star(conda_cli):
 
 
 def test_only_python(conda_cli, tmp_path):
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--keep",
         "python",
+        "--platform",
+        platform,
         "--output",
         tmp_path,
     )
@@ -36,7 +39,7 @@ def test_only_python(conda_cli, tmp_path):
     print(err, file=sys.stderr)
     assert rc == 0
     tested = 0
-    for subdir in context.subdir, "noarch":
+    for subdir in platform, "noarch":
         if (tmp_path / subdir / "repodata.json").is_file():
             tested += 1
             channel = Channel(str(tmp_path / subdir))
@@ -49,12 +52,15 @@ def test_only_python(conda_cli, tmp_path):
 def test_python_tree(conda_cli, tmp_path):
     spec = "python=3.9"
     channel_path = tmp_path / "channel"
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--keep-tree",
         spec,
+        "--platform",
+        platform,
         "--output",
         channel_path,
     )
@@ -63,7 +69,7 @@ def test_python_tree(conda_cli, tmp_path):
     assert rc == 0
     tested = 0
     tested += 1
-    channel = Channel(str(channel_path / context.subdir))
+    channel = Channel(str(channel_path / platform))
     sd = SubdirData(channel)
     sd.load()
     python_count = 0
@@ -119,12 +125,15 @@ def test_python_tree(conda_cli, tmp_path):
 
 
 def test_not_python(conda_cli, tmp_path):
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--remove",
         "python",
+        "--platform",
+        platform,
         "--output",
         tmp_path,
     )
@@ -132,7 +141,7 @@ def test_not_python(conda_cli, tmp_path):
     print(err, file=sys.stderr)
     assert rc == 0
     tested = 0
-    for subdir in context.subdir, "noarch":
+    for subdir in platform, "noarch":
         if (tmp_path / subdir / "repodata.json").is_file():
             tested += 1
             channel = Channel(str(tmp_path / subdir))
@@ -143,12 +152,15 @@ def test_not_python(conda_cli, tmp_path):
 
 
 def test_only_after(conda_cli, tmp_path):
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--after",
         "2024",
+        "--platform",
+        platform,
         "--output",
         tmp_path,
     )
@@ -157,7 +169,7 @@ def test_only_after(conda_cli, tmp_path):
     assert rc == 0
     tested = 0
     timestamp_2024 = datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()
-    for subdir in context.subdir, "noarch":
+    for subdir in platform, "noarch":
         if (tmp_path / subdir / "repodata.json").is_file():
             tested += 1
             channel = Channel(str(tmp_path / subdir))
@@ -228,12 +240,15 @@ def test_between_dates(conda_cli, tmp_path):
 
 def test_base_url(conda_cli, tmp_path):
     base_url = "https://a-redefined-base.url"
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--keep",
         "python=3.9",
+        "--platform",
+        platform,
         "--base-url",
         base_url,
         "--output",
@@ -243,18 +258,21 @@ def test_base_url(conda_cli, tmp_path):
     print(err, file=sys.stderr)
     assert rc == 0
 
-    data = json.loads((tmp_path / context.subdir / "repodata.json").read_text())
+    data = json.loads((tmp_path / platform / "repodata.json").read_text())
     assert data["info"]["base_url"] == base_url
 
 
 def test_served_at(conda_cli, tmp_path):
     served_at = "https://my-fancy-channel.url"
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--keep",
         "python=3.9",
+        "--platform",
+        platform,
         "--served-at",
         served_at,
         "--output",
@@ -271,12 +289,15 @@ def test_served_at(conda_cli, tmp_path):
 def test_pruned_python(conda_cli, tmp_path):
     spec = "python=3.9"
     channel_path = tmp_path / "channel"
+    platform = "linux-64"
     out, err, rc = conda_cli(
         "subchannel",
         "-c",
         "conda-forge",
         "--prune",
         spec,
+        "--platform",
+        platform,
         "--output",
         channel_path,
     )
@@ -294,6 +315,8 @@ def test_pruned_python(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "python=3.9",
         )
 
@@ -307,6 +330,8 @@ def test_pruned_python(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "python=3.10",
         )
 
@@ -321,5 +346,7 @@ def test_pruned_python(conda_cli, tmp_path):
             "--override-channels",
             "--channel",
             channel_path,
+            "--platform",
+            platform,
             "nodejs",
         )
