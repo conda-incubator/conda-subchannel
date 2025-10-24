@@ -8,7 +8,7 @@ from conda.core.subdir_data import SubdirData
 from conda.models.channel import Channel
 from conda.models.match_spec import MatchSpec
 from conda.exceptions import ArgumentError, DryRunExit, PackagesNotFoundError
-from conda.testing import conda_cli  # noqa
+from conda.testing.fixtures import conda_cli  # noqa
 
 
 def test_noop(conda_cli):
