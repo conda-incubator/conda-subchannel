@@ -32,15 +32,15 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         python-version: ["38", "39", "310", "311"]
         include:
-          - os: macos-13
+          - os: macos-15-intel
             python-version: "310"
-          - os: macos-14
+          - os: macos-latest
             python-version: "311"
     env:
       PIXI_ENV_NAME: test-py${{ matrix.python-version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
       - uses: prefix-dev/setup-pixi@28eb668aafebd9dede9d97c4ba1cd9989a4d0004 # v0.9.2
@@ -61,7 +61,7 @@ jobs:
       contents: write  # to deploy to GH Pages automatically
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
       - uses: ./
