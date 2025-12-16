@@ -4,7 +4,7 @@
 
 ```
 $ conda subchannel --help
-usage: conda subchannel -c CHANNEL [--repodata-fn REPODATA_FN] [--base-url BASE_URL] [--output PATH] [--subdir PLATFORM] [--after TIME] [--before TIME] [--keep-tree SPEC] [--keep SPEC] [--remove SPEC] [-h]
+usage: conda subchannel -c CHANNEL [--repodata-fn REPODATA_FN] [--base-url BASE_URL] [--output PATH] [--served-at URL] [--subdir PLATFORM] [--after TIME] [--before TIME] [--keep-tree SPEC] [--keep SPEC] [--prune SPEC] [--remove SPEC] [--remove-depends REMOVE_DEPENDS] [-h]
 
 Create subsets of conda channels thanks to CEP-15 metadata
 
@@ -17,6 +17,7 @@ options:
                         '--channel'. Only needed if the user wants to mirror the required packages
                         separately.
   --output PATH         Directory where the subchannel repodata.json artifacts will be written to.
+  --served-at URL       URL or location where the subchannel files will be eventually served. Used for the HTML output.
   --subdir PLATFORM, --platform PLATFORM
                         Process records for this platform. Defaults to osx-arm64. noarch is always included. Can be used several times.
   --after TIME          Timestamp as ts:<float> or date as YYYY-[MM[-DD[-HH[-MM[-SS]]]]]
@@ -24,11 +25,12 @@ options:
   --keep-tree SPEC      Keep packages matching this spec and their dependencies. Can be used
                         several times.
   --keep SPEC           Keep packages matching this spec only. Can be used several times.
-  --prune SPEC          Remove the distributions of this package name that do not match the
-                        given constraints.
+  --prune SPEC          Remove the distributions of this package name that do not match this spec.
   --remove SPEC         Remove packages matching this spec. Can be used several times.
+  --remove-depends REMOVE_DEPENDS
+                        Remove packages that have a dependency on this pattern. Can be used several times.
   -h, --help            Show this help message and exit.
-  ```
+```
 
 
 ## Filtering algorithm
@@ -40,7 +42,8 @@ In the first phase, we _select_ which records are going to be kept. Everything e
 1. A selection list is built. Records in this list are added if:
   - They match specs in `--keep-tree`, or any of the dependencies in their tree (assessed recursively).
   - They match any of the specs in `--keep`.
-  - Their timestamp is within the limits marked by `--before` and `--after`, when applicable. 
+  - Their timestamp is within the limits marked by `--before` and `--after`, when applicable.
 2. At this point, records that didn't make it to the selection list are removed.
 3. The specs defined `--prune` are processed. Records that have the same name but don't match the spec are removed. Everything else is ignored.
 4. Records matching any of the specs in `--remove` are filtered out.
+5. Records that have dependencies matching any of the patterns in ``--remove-depends`` are filtered out.

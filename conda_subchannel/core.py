@@ -5,6 +5,9 @@ import bz2
 import hashlib
 import json
 import logging
+import fnmatch as _fnmatch
+import re
+from functools import lru_cache
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -30,6 +33,47 @@ ZSTD_COMPRESS_LEVEL = 16
 ZSTD_COMPRESS_THREADS = -1  # automatic
 
 log = logging.getLogger(f"conda.{__name__}")
+
+
+# Copied from https://github.com/conda-forge/conda-forge-repodata-patches-feedstock/blob/2daa1f620d750a16849d9bfe340885ac1ad39dc5/recipe/patch_yaml_utils.py#L47C1-L78C35
+@lru_cache(maxsize=32768)
+def fnmatch(name, pat):
+    """Test whether FILENAME matches PATTERN with custom
+    allowed optional space via '?( *)'.
+
+    This is useful to match single names with or without a version
+    but not other packages.
+
+    Here are various cases to illustrate how this works:
+
+      - 'numpy*' will match 'numpy', 'numpy >=1', and 'numpy-blah >=10'.
+      - 'numpy?( *)' will match only 'numpy', 'numpy >=1'.
+      - 'numpy' only matches 'numpy'
+
+    **doc string below is from python stdlib**
+
+    Patterns are Unix shell style:
+
+    *       matches everything
+    ?       matches any single character
+    [seq]   matches any character in seq
+    [!seq]  matches any char not in seq
+
+    An initial period in FILENAME is not special.
+    Both FILENAME and PATTERN are first case-normalized
+    if the operating system requires it.
+    If you don't want this, use fnmatchcase(FILENAME, PATTERN).
+    """
+    name = os.path.normcase(name)
+    pat = os.path.normcase(pat)
+    match = _fnmatch_build_re(pat)
+    return match(name) is not None
+
+
+@lru_cache(maxsize=32768)
+def _fnmatch_build_re(pat):
+    repat = "(?s:\\ .*)?".join([_fnmatch.translate(p)[:-2] for p in pat.split("?( *)")]) + "\\Z"
+    return re.compile(repat).match
 
 
 def _fetch_channel(channel, subdirs=None, repodata_fn=REPODATA_FN):
@@ -74,6 +118,7 @@ def _reduce_index(
     subdir_datas: Iterable[SubdirData],
     specs_to_keep: Iterable[str | MatchSpec] | None = None,
     specs_to_remove: Iterable[str | MatchSpec] | None = None,
+    specs_depends_to_remove: Iterable[str] | None = None,
     specs_to_prune: Iterable[str | MatchSpec] | None = None,
     trees_to_keep: Iterable[str | MatchSpec] | None = None,
     after: int | None = None,
@@ -81,6 +126,7 @@ def _reduce_index(
 ) -> dict[tuple[str, str], PackageRecord]:
     specs_to_keep = [MatchSpec(spec) for spec in (specs_to_keep or ())]
     specs_to_remove = [MatchSpec(spec) for spec in (specs_to_remove or ())]
+    specs_depends_to_remove = specs_depends_to_remove or ()
     specs_to_prune = [MatchSpec(spec) for spec in (specs_to_prune or ())]
     trees_to_keep = [MatchSpec(spec) for spec in (trees_to_keep or ())]
     if trees_to_keep or specs_to_keep or after is not None or before is not None:
@@ -153,7 +199,14 @@ def _reduce_index(
         for key, record in records.items():
             if spec.match(record):
                 to_remove.add(key)
-    
+
+    for spec in specs_depends_to_remove:
+        for key, record in records.items():
+            for dep in record["depends"]:
+                if fnmatch(dep, spec):
+                    to_remove.add(key)
+                    break
+
     for key in to_remove:
         records.pop(key)
 
@@ -206,7 +259,12 @@ def _checksum(path, algorithm, buffersize=65536):
     return hash_impl.hexdigest()
 
 
-def _write_channel_index_html(source_channel: Channel, channel_path: Path, cli_flags: dict[str, Any], served_at: str | None = None):
+def _write_channel_index_html(
+    source_channel: Channel,
+    channel_path: Path,
+    cli_flags: dict[str, Any],
+    served_at: str | None = None,
+):
     templates_dir = Path(__file__).parent / "templates"
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader(templates_dir))
     template = environment.get_template("channel.j2.html")
