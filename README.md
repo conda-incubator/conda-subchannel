@@ -6,8 +6,8 @@ Create subsets of conda channels thanks to CEP-15 metadata
 
 ```bash
 $ conda install -n base conda-subchannel
-$ conda subchannel --channel=conda-forge --keep-tree python=3.9
-$ python -m http.serve --directory subchannel/
+$ conda subchannel --channel=conda-forge --keep-tree python=3.14
+$ python -m http.server --directory subchannel/
 ```
 
 ## Github Actions action
@@ -29,8 +29,8 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: jaimergp/conda-subchannel@main
+      - uses: conda-incubator/conda-subchannel@main
         with:
           channel: conda-forge
-          keep-trees: python=3.9
+          keep-trees: python=3.14
 ```

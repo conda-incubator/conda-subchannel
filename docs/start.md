@@ -121,26 +121,26 @@ The following packages will be downloaded:
 
 The following NEW packages will be INSTALLED:
 
-  _libgcc_mutex      subchannel/linux-64::_libgcc_mutex-0.1-conda_forge 
-  _openmp_mutex      subchannel/linux-64::_openmp_mutex-4.5-2_gnu 
-  bzip2              subchannel/linux-64::bzip2-1.0.8-hd590300_5 
-  ca-certificates    subchannel/linux-64::ca-certificates-2024.2.2-hbcca054_0 
-  ld_impl_linux-64   subchannel/linux-64::ld_impl_linux-64-2.40-hf3520f5_1 
-  libffi             subchannel/linux-64::libffi-3.4.2-h7f98852_5 
-  libgcc-ng          subchannel/linux-64::libgcc-ng-13.2.0-h77fa898_7 
-  libgomp            subchannel/linux-64::libgomp-13.2.0-h77fa898_7 
-  libnsl             subchannel/linux-64::libnsl-2.0.1-hd590300_0 
-  libsqlite          subchannel/linux-64::libsqlite-3.45.3-h2797004_0 
-  libuuid            subchannel/linux-64::libuuid-2.38.1-h0b41bf4_0 
-  libxcrypt          subchannel/linux-64::libxcrypt-4.4.36-hd590300_1 
-  libzlib            subchannel/linux-64::libzlib-1.2.13-h4ab18f5_6 
-  ncurses            subchannel/linux-64::ncurses-6.5-h59595ed_0 
-  openssl            subchannel/linux-64::openssl-3.3.0-h4ab18f5_3 
-  python             subchannel/linux-64::python-3.10.14-hd12c33a_0_cpython 
-  readline           subchannel/linux-64::readline-8.2-h8228510_1 
-  tk                 subchannel/linux-64::tk-8.6.13-noxft_h4845f30_101 
-  tzdata             subchannel/noarch::tzdata-2024a-h0c530f3_0 
-  xz                 subchannel/linux-64::xz-5.2.6-h166bdaf_0 
+  _libgcc_mutex      subchannel/linux-64::_libgcc_mutex-0.1-conda_forge
+  _openmp_mutex      subchannel/linux-64::_openmp_mutex-4.5-2_gnu
+  bzip2              subchannel/linux-64::bzip2-1.0.8-hd590300_5
+  ca-certificates    subchannel/linux-64::ca-certificates-2024.2.2-hbcca054_0
+  ld_impl_linux-64   subchannel/linux-64::ld_impl_linux-64-2.40-hf3520f5_1
+  libffi             subchannel/linux-64::libffi-3.4.2-h7f98852_5
+  libgcc-ng          subchannel/linux-64::libgcc-ng-13.2.0-h77fa898_7
+  libgomp            subchannel/linux-64::libgomp-13.2.0-h77fa898_7
+  libnsl             subchannel/linux-64::libnsl-2.0.1-hd590300_0
+  libsqlite          subchannel/linux-64::libsqlite-3.45.3-h2797004_0
+  libuuid            subchannel/linux-64::libuuid-2.38.1-h0b41bf4_0
+  libxcrypt          subchannel/linux-64::libxcrypt-4.4.36-hd590300_1
+  libzlib            subchannel/linux-64::libzlib-1.2.13-h4ab18f5_6
+  ncurses            subchannel/linux-64::ncurses-6.5-h59595ed_0
+  openssl            subchannel/linux-64::openssl-3.3.0-h4ab18f5_3
+  python             subchannel/linux-64::python-3.10.14-hd12c33a_0_cpython
+  readline           subchannel/linux-64::readline-8.2-h8228510_1
+  tk                 subchannel/linux-64::tk-8.6.13-noxft_h4845f30_101
+  tzdata             subchannel/noarch::tzdata-2024a-h0c530f3_0
+  xz                 subchannel/linux-64::xz-5.2.6-h166bdaf_0
 
 
 
@@ -174,7 +174,7 @@ looking for, navigate to
 `python=3.10` is not available on `osx-64`, only `linux-64`:
 
 ```
-$ conda create -dnx --override-channel -c ./subchannel python=3.10 --platform=osx-64  
+$ conda create -dnx --override-channel -c ./subchannel python=3.10 --platform=osx-64
 Channels:
  - ./subchannel
 Platform: osx-64

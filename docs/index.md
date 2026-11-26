@@ -33,11 +33,11 @@ Learn about all available configuration options
 ::::{grid} 2
 
 :::{grid-item-card} 📝 Changelog
-:link: https://github.com/jaimergp/conda-subchannel/blob/main/CHANGELOG.md
+:link: https://github.com/conda-incubator/conda-subchannel/blob/main/CHANGELOG.md
 Recent changes and updates to the project
 :::
 :::{grid-item-card} 🐞 Found a bug?
-:link: https://github.com/jaimergp/conda-subchannel/issues/new/choose
+:link: https://github.com/conda-incubator/conda-subchannel/issues/new/choose
 File an issue in our tracker
 :::
 ::::

@@ -11,7 +11,7 @@
 project = html_title = "conda-subchannel"
 copyright = "2024, conda-subchannel contributors"
 author = "conda-subchannel contributors"
-html_baseurl = "https://jaimergp.github.io/conda-subchannel"
+html_baseurl = "https://conda-incubator.github.io/conda-subchannel/"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -69,7 +69,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/conda/conda-subchannel",
+            "url": "https://github.com/conda-incubator/conda-subchannel",
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         },
@@ -89,7 +89,7 @@ html_theme_options = {
 }
 
 html_context = {
-    "github_user": "jaimergp",
+    "github_user": "conda-incubator",
     "github_repo": "conda-subchannel",
     "github_version": "main",
     "doc_path": "docs",

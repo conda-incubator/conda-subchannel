@@ -1,6 +1,6 @@
 # Github Actions action
 
-We also provide a convenience Actions wrapper you can use in your CI/CD workflows. All options are documented in the [`action.yml` file](https://github.com/jaimergp/conda-subchannel/blob/main/action.yml).
+We also provide a convenience Actions wrapper you can use in your CI/CD workflows. All options are documented in the [`action.yml` file](https://github.com/conda-incubator/conda-subchannel/blob/main/action.yml).
 
 This will run `conda subchannel` for you and then upload the resulting files to GH Pages. A few `index.md` files are thrown in so Github Pages renders them in a nice way. They will summarize which subdirs are available and some details about the available repodata.json files. See the live demo below for more details.
 
