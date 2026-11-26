@@ -5,7 +5,9 @@ from .cli import configure_parser, execute
 
 @plugins.hookimpl
 def conda_subcommands():
-    yield plugins.CondaSubcommand(
+    from conda.plugins.types import CondaSubcommand
+
+    yield CondaSubcommand(
         name="subchannel",
         summary="Create subsets of conda channels thanks to CEP-15 metadata",
         action=execute,

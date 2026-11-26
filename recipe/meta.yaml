@@ -18,16 +18,17 @@ build:
 
 requirements:
   host:
-    - python >=3.8
+    - python >=3.11
     - pip
     - hatchling >=1.12.2
     - hatch-vcs >=0.2.0
     - conda >=23.9
   run:
-    - python >=3.8
+    - python >=3.11
     - conda >=23.9
     - conda-index
     - jinja2
+    - zstandard
 
 test:
   imports:
